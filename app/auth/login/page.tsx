@@ -14,6 +14,7 @@ import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { authAPI } from "@/lib/api"
 import { authUtils } from "@/lib/store"
 import { useAuthStore } from "@/lib/store/auth"
+import { Informer } from "@/components/ui/informer";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -22,6 +23,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+    const [informerMessage, setInformerMessage] = useState<{
+      message: string;
+      type: "success" | "error" | "info";
+    } | null>(null);
 
    const { login, isAuthenticated, error } = useAuthStore();
 
@@ -38,21 +43,23 @@ export default function LoginPage() {
       // sessionStorage.setItem("user-role", user.role)
       // sessionStorage.setItem("user-name", user.firstName)
 
-      toast({
-        variant: "destructive",
-        title: "Login successful",
-        description: "Welcome back to FidelityTrust!",
-      });
+ 
+           setInformerMessage({
+             message: "Login successful, Welcome back to FidelityTrust!",
+             type: "success",
+           });
+
       setTimeout(() => {
         router.push("/dashboard")
 },3000)
 
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
-      })
+  
+           setInformerMessage({
+             message:
+               "Error logging in. Please check your credentials and try again.",
+             type: "error",
+           });
     } finally {
       setIsLoading(false)
     }
@@ -60,6 +67,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-900 to-green-500 flex flex-col items-center justify-center p-4">
+      {informerMessage && (
+        <Informer
+          message={informerMessage.message}
+          type={informerMessage.type}
+          onClose={() => setInformerMessage(null)}
+        />
+      )}
       <Link
         href="/"
         className="absolute top-4 left-4 text-white flex items-center hover:text-emerald-400 transition-colors"
@@ -99,7 +113,10 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link href="/auth/forgot-password" className="text-sm text-emerald-400 hover:underline">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-emerald-400 hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -118,7 +135,11 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -134,7 +155,10 @@ export default function LoginPage() {
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-sm text-gray-400">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/signup" className="text-emerald-400 hover:underline">
+            <Link
+              href="/auth/signup"
+              className="text-emerald-400 hover:underline"
+            >
               Sign up
             </Link>
           </div>
@@ -147,5 +171,5 @@ export default function LoginPage() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

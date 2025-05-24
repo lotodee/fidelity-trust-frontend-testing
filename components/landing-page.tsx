@@ -79,29 +79,28 @@ export function LandingPage() {
               <Link href="#features">
                 <Button
                   size="lg"
-                  variant="outline"
                   className="w-full sm:w-auto border-white text-white hover:bg-white/10"
                 >
                   Learn More
                 </Button>
               </Link>
             </div>
-          </div>f
+          </div>
           <div className="relative">
             <div className="relative z-10 transform rotate-6">
               <img
-                src="/placeholder.svg?height=600&width=300"
+                src="/phone3.png"
                 alt="Mobile banking app"
-                className="rounded-3xl shadow-2xl"
+                className=""
               />
             </div>
-            <div className="absolute top-20 -right-4 z-20 transform -rotate-6">
+            {/* <div className="absolute top-20 -right-4 z-20 transform -rotate-6">
               <img
                 src="/placeholder.svg?height=500&width=250"
                 alt="Transaction history"
                 className="rounded-3xl shadow-2xl"
               />
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -128,7 +127,7 @@ export function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="container mx-auto px-4 py-20">
+      {/* <section id="features" className="container mx-auto px-4 py-20">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
           Banking Features That Make Life Easier
         </h2>
@@ -154,7 +153,7 @@ export function LandingPage() {
             description="Your money and data are protected with advanced encryption and security protocols."
           />
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="bg-navy-950 py-12 border-t border-white/10">
