@@ -51,7 +51,6 @@ logout()
 
   const navigationItems = [
     { name: "Home", href: "/dashboard", icon: Home },
-    { name: "Accounts", href: "/dashboard/accounts", icon: CreditCard },
     { name: "Transactions", href: "/dashboard/transactions", icon: BarChart3 },
     { name: "Coins", href: "/dashboard/coins", icon: Coins },
     { name: "Profile", href: "/dashboard/profile", icon: User },

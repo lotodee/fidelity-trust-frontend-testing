@@ -163,11 +163,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <div className="text-center text-xs text-gray-500">
-            <Link href="/auth/admin-login" className="hover:text-emerald-400">
-              Admin Login
-            </Link>
-          </div>
+      
         </CardFooter>
       </Card>
     </div>
