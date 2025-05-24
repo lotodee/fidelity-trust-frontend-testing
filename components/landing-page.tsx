@@ -2,6 +2,7 @@ import type React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, TrendingUp, Globe, CreditCard, Star } from "lucide-react";
+import Image from "next/image";
 
 export function LandingPage() {
   return (
@@ -88,7 +89,9 @@ export function LandingPage() {
           </div>
           <div className="relative">
             <div className="relative z-10 transform rotate-6">
-              <img
+              <Image
+                width={2000}
+                height={2000}
                 src="/phone3.png"
                 alt="Mobile banking app"
                 className=""
