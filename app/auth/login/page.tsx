@@ -31,7 +31,7 @@ export default function LoginPage() {
 
     try {
       // Use the auth API from lib
-    await login(email, password )
+    // await login(email, password )
 
       // Store token in session storage using the utility
       // authUtils.storeToken("auth-token", token)

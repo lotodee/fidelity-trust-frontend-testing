@@ -38,12 +38,12 @@ export default function SignupPage() {
 
    const { register, isAuthenticated, error } = useAuthStore();
 
-   useEffect(() => {
+  //  useEffect(() => {
     
-     if (isAuthenticated) {
-       router.push("/dashboard");
-     }
-   }, [isAuthenticated, router]);
+  //    if (isAuthenticated) {
+  //      router.push("/dashboard");
+  //    }
+  //  }, [isAuthenticated, router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,9 +66,9 @@ export default function SignupPage() {
       const lastName = nameParts.slice(1).join(" ") || "";
 
       // Use the auth API from lib
-      const response = await register(firstName, lastName, email, password);
+      // const response = await register(firstName, lastName, email, password);
 
-      console.log("the register response is", response);
+      // console.log("the register response is", response);
 
       setInformerMessage({
         message: "Account created successfully! Welcome to FidelityTrust!",
