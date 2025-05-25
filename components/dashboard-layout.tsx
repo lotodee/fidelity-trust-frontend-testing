@@ -38,11 +38,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
  const { register, isAuthenticated, error } = useAuthStore();
 
- useEffect(() => {
-   if (!isAuthenticated) {
-     router.push("/auth/login");
-   }
- }, [isAuthenticated, router]);
+//  useEffect(() => {
+//    if (!isAuthenticated) {
+//      router.push("/auth/login");
+//    }
+//  }, [isAuthenticated, router]);
   const handleLogout = () => {
 logout()
 

@@ -224,6 +224,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { authUtils } from "@/lib/store";
+import { ChatButton } from "@/components/chat-button";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState("");
@@ -359,7 +360,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center w-full">
             <div className="flex items-center">
               <SidebarTrigger className="mr-4" />
-              <h1 className="text-xl font-semibold text-gray-800">
+              <h1 className="text-xl font-semibold text-emerald-500">
                 {pathname === "/admin/dashboard" && "Admin Dashboard"}
                 {pathname === "/admin/users" && "User Management"}
                 {pathname === "/admin/transactions" && "Transaction Management"}
@@ -384,6 +385,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-auto w-full px-6 py-6">
             {children}
           </main>
+        <ChatButton />
+
         </div>
       </div>
     </SidebarProvider>
