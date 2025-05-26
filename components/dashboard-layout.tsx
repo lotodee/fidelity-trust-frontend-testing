@@ -58,13 +58,13 @@ logout()
 
   if (isMobile) {
     return (
-      <div className="flex flex-col min-h-screen w-full bg-gray-50">
+      <div className="flex flex-col min-h-screen w-full bg-gray-50 scrollbar-hide">
         {/* Mobile Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center mb-2">
           <div className="flex items-center space-x-2">
-            <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center"></div>
+            {/* <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center"></div> */}
             <div className="bg-navy-900 px-3 py-1.5 rounded-md">
-              <span className="font-bold text-lg">
+              <span className="font-bold text-sm">
                 <span className="text-green-500">Fidelity</span>
                 <span className="text-white">Trust</span>
               </span>
@@ -75,18 +75,21 @@ logout()
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
             </Button>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
+            <div
+              className="p-2 rounded-xl cursor-pointer bg-gray-100 hover:bg-transparent"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 hover:text-red-500" />
+            </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto w-full">{children}</main>
+        <main className="flex-1 overflow-auto w-full px-2  ">{children}</main>
 
         {/* Mobile Bottom Navigation */}
         <nav className="sticky bottom-0 z-30 bg-white border-t border-gray-200 w-full">
-          <div className="grid grid-cols-5 h-16">
+          <div className="grid grid-cols-4 h-16">
             {navigationItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -229,7 +232,7 @@ logout()
 
           {/* Main Content */}
           <div className="flex-1 overflow-auto">
-            <div className="w-full px-6 py-6 m-5 bg-white rounded-2xl shadow-sm">
+            <div className="w-full bg-white rounded-2xl shadow-sm">
               {children}
             </div>
           </div>

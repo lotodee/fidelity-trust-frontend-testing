@@ -41,12 +41,12 @@ export default function Dashboard() {
     },
   ])
 
-  useEffect(() => {
-    const name = sessionStorage.getItem("user-name")
-    if (name) {
-      setUserName(name)
-    }
-  }, [])
+  // useEffect(() => {
+  //   const name = sessionStorage.getItem("user-name")
+  //   if (name) {
+  //     setUserName(name)
+  //   }
+  // }, [])
 
   return (
     <DashboardLayout>

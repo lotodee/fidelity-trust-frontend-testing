@@ -60,6 +60,7 @@
     "recharts": "latest",
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
+    "tailwind-scrollbar-hide": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "use-sync-external-store": "latest",
     "uuid": "latest",

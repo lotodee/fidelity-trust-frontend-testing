@@ -89,13 +89,21 @@
     --input: 142 32.6% 17.5%;
     --ring: 142 26.8% 83.9%;
   }
-}
 
-@layer base {
+
+
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
   }
+  .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;    /* Firefox */
+}
 }
