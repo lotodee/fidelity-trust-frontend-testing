@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { SplashScreen } from "@/components/splash-screen"
 import { LandingPage } from "@/components/landing-page"
+import InstallPrompt from "@/components/install-prompt"
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true)
@@ -24,5 +25,10 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [router])
 
-  return showSplash ? <SplashScreen /> : <LandingPage />
+  return showSplash ? <SplashScreen /> :
+  <>
+      <InstallPrompt />
+      <LandingPage />
+    </>
+  
 }
