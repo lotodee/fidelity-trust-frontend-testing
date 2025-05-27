@@ -175,7 +175,7 @@ export default function SignupPage() {
 
     try {
       // Complete registration
-      await register(personalInfo.firstName, personalInfo.lastName, personalInfo.email, identityInfo.password)
+      // await register(personalInfo.firstName, personalInfo.lastName, personalInfo.email, identityInfo.password)
 
       setInformerMessage({
         message: "Account created successfully! Welcome to FidelityTrust!",
