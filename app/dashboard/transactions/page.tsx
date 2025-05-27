@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { ArrowUpRight, ArrowDownRight, Wallet, Send } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, Search } from "lucide-react"
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -101,18 +101,23 @@ export default function Transactions() {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* <h1 className="text-2xl font-bold">Transactions</h1> */}
-          <Input
-            placeholder="Search transactions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-xs ml-auto"
-          />
+          <div className="relative ml-auto w-full max-w-xs my-2">
+            <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-green-500" />
+            <Input
+              placeholder="Search transactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10"
+            />
+          </div>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>
-            <CardDescription>View and filter your transaction history.</CardDescription>
+            <CardDescription>
+              View and filter your transaction history.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="all" className="w-full">
@@ -143,13 +148,19 @@ export default function Transactions() {
                               {getCategoryIcon(transaction.category)}
                             </div>
                             <div className="ml-4">
-                              <div className="font-medium">{transaction.name}</div>
-                              <div className="text-sm text-gray-500">{transaction.date}</div>
+                              <div className="font-medium">
+                                {transaction.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {transaction.date}
+                              </div>
                             </div>
                           </div>
                           <div
                             className={`font-medium ${
-                              transaction.type === "expense" ? "text-red-600" : "text-emerald-600"
+                              transaction.type === "expense"
+                                ? "text-red-600"
+                                : "text-emerald-600"
                             }`}
                           >
                             {transaction.amount}
@@ -157,7 +168,9 @@ export default function Transactions() {
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-10 text-gray-500">No transactions found.</div>
+                      <div className="text-center py-10 text-gray-500">
+                        No transactions found.
+                      </div>
                     )}
                   </div>
                 </TabsContent>
@@ -167,5 +180,5 @@ export default function Transactions() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  );
 }

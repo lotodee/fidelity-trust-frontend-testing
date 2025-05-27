@@ -12,6 +12,7 @@ import {
   LogOut,
   Bell,
   Menu,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -52,10 +53,11 @@ logout()
   const navigationItems = [
     { name: "Home", href: "/dashboard", icon: Home },
     { name: "Transactions", href: "/dashboard/transactions", icon: BarChart3 },
-    { name: "Coins", href: "/dashboard/coins", icon: Coins },
+    { name: "Stocks", href: "/dashboard/stocks", icon: TrendingUp },
     { name: "Profile", href: "/dashboard/profile", icon: User },
   ];
 
+   
   if (isMobile) {
     return (
       <div className="flex flex-col min-h-screen w-full bg-gray-50 scrollbar-hide">
@@ -81,11 +83,19 @@ logout()
             >
               <LogOut className="h-4 w-4 hover:text-red-500" />
             </div>
+            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-xl shadow-sm">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <span className="font-medium text-gray-700">{userName}</span>
+            </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto w-full px-2  ">{children}</main>
+        <main className="flex-1 overflow-auto w-full px-4 h-screen">
+          {children}
+        </main>
 
         {/* Mobile Bottom Navigation */}
         <nav className="sticky bottom-0 z-30 bg-white border-t border-gray-200 w-full">
@@ -161,14 +171,16 @@ logout()
                         className={`flex items-center gap-4 px-4 my-2  py-6 w-full rounded-xl transition-all duration-200
                           ${
                             isActive
-                              ? "bg-emerald-400 text-white  py-8 shadow-lg font-bold scale-105"
+                              ? "bg-gradient-to-r from-navy-800 to-navy-900 text-white  py-8 shadow-lg font-bold scale-105"
                               : "text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 hover:scale-105 py-4"
                           }
                         `}
                       >
                         <div
                           className={`p-2.5 rounded-xl ${
-                            isActive ? "bg-white/20 text-white" : "bg-emerald-400 text-white"
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-emerald-400 text-white"
                           }`}
                         >
                           <item.icon
@@ -232,7 +244,7 @@ logout()
 
           {/* Main Content */}
           <div className="flex-1 overflow-auto">
-            <div className="w-full bg-white rounded-2xl shadow-sm">
+            <div className="w-full bg-white rounded-2xl shadow-sm px-4 h-screen">
               {children}
             </div>
           </div>
