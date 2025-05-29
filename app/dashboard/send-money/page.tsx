@@ -284,9 +284,9 @@ export default function SendMoney() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto mb-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="text-2xl font-bold mb-6">Send Money</h1>
+          <h1 className="text-2xl font-bold mb-6 p-2">Send Money</h1>
 
           {/* Transfer Options */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

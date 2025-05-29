@@ -60,57 +60,28 @@ export default function Dashboard() {
     },
   ])
 
-  useEffect(() => {
-    // Check KYC status on component mount
-    const timer = setTimeout(() => {
-      if (!kycVerified) {
-        setShowKycModal(true)
-      }
-    }, 2000)
+  // useEffect(() => {
+  //   // Check KYC status on component mount
+  //   const timer = setTimeout(() => {
+  //     if (!kycVerified) {
+  //       setShowKycModal(true)
+  //     }
+  //   }, 2000)
 
-    return () => clearTimeout(timer)
-  }, [kycVerified])
+  //   return () => clearTimeout(timer)
+  // }, [kycVerified])
 
-  const handleCompleteKyc = () => {
-    setShowKycModal(false)
-    // Redirect to KYC completion flow
-    // router.push("/dashboard/kyc")
-  }
+  // const handleCompleteKyc = () => {
+  //   setShowKycModal(false)
+  //   // Redirect to KYC completion flow
+  //   // router.push("/dashboard/kyc")
+  // }
 
   return (
     <DashboardLayout>
       <div className="space-y-6 w-full">
         {/* KYC Verification Modal */}
-        <Dialog open={showKycModal} onOpenChange={setShowKycModal}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
-                Complete Your Verification
-              </DialogTitle>
-              <DialogDescription>
-                To ensure the security of your account and comply with regulations, please complete your KYC (Know Your
-                Customer) verification.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Required:</strong> Upload a government-issued ID and proof of address to verify your identity
-                  and unlock all features.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setShowKycModal(false)} className="flex-1">
-                  Later
-                </Button>
-                <Button onClick={handleCompleteKyc} className="flex-1 bg-emerald-500 hover:bg-emerald-600">
-                  Complete Now
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+      
 
         {/* Welcome Section */}
         <motion.section
@@ -192,7 +163,7 @@ export default function Dashboard() {
               className="bg-white/10 border-white/20 hover:bg-white/20 text-white flex items-center justify-center gap-2 h-auto py-3 transition-all duration-200 hover:scale-105"
               asChild
             >
-              <Link href="/dashboard/coins">
+              <Link href="/dashboard/cards">
                 <WalletCards className="h-5 w-5" />
                 <span>Cards</span>
               </Link>

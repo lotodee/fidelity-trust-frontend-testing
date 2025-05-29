@@ -15,9 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, CreditCard, Wallet, ArrowRight } from "lucide-react";
+import { Plus, CreditCard, Wallet } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { motion } from "framer-motion";
 
 interface CardData {
   id: number;
@@ -70,18 +69,71 @@ export default function Cards() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Cards</h1>
-            <p className="text-gray-500 mt-1">Manage your virtual cards</p>
-          </div>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Cards</h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cards.map((card) => (
+            <Card
+              key={card.id}
+              className="bg-gradient-to-br from-navy-800 to-navy-950 text-white overflow-hidden"
+            >
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-8">
+                  <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <span className="font-bold text-white text-sm">N</span>
+                  </div>
+                  <CreditCard className="h-6 w-6 text-white/80" />
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-lg font-mono">{card.number}</div>
+                </div>
+
+                <div className="flex justify-between items-end">
+                  <div>
+                    <div className="text-xs text-white/70 mb-1">
+                      CARD HOLDER
+                    </div>
+                    <div>{card.name}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-white/70 mb-1">EXPIRES</div>
+                    <div>{card.expiry}</div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="bg-white/5 p-4">
+                <div className="w-full flex justify-between items-center">
+                  <div>
+                    <div className="text-xs text-white/70">
+                      AVAILABLE BALANCE
+                    </div>
+                    <div className="text-lg font-semibold">{card.balance}</div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-white/20 text-white bg-white/10"
+                    >
+                      <Wallet className="h-4 w-4 mr-2" />
+                      Fund
+                    </Button>
+                  </div>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
+
           <Dialog open={showAddCard} onOpenChange={setShowAddCard}>
             <DialogTrigger asChild>
-              <Button className="bg-emerald-500 hover:bg-emerald-600">
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Card
-              </Button>
+              <Card className="border-dashed border-2 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-colors cursor-pointer">
+                <CardContent className="flex flex-col items-center justify-center h-full py-10">
+                  <Plus className="h-10 w-10 text-gray-400" />
+                  <p className="mt-2 text-gray-500 font-medium">Add New Card</p>
+                </CardContent>
+              </Card>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -154,100 +206,6 @@ export default function Cards() {
             </DialogContent>
           </Dialog>
         </div>
-
-        {cards.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-16 px-4 text-center"
-          >
-            <div className="rounded-full bg-gray-100 p-6 mb-4">
-              <CreditCard className="h-12 w-12 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">No Cards Yet</h3>
-            <p className="text-gray-500 mb-6 max-w-sm">
-              Create your first virtual card to start making secure online
-              purchases
-            </p>
-            <Button
-              className="bg-emerald-500 hover:bg-emerald-600"
-              onClick={() => setShowAddCard(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Card
-            </Button>
-          </motion.div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {cards.map((card, index) => (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="bg-gradient-to-br from-navy-800 to-navy-950 text-white overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-8">
-                      <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-                        <span className="font-bold text-white text-sm">N</span>
-                      </div>
-                      <CreditCard className="h-6 w-6 text-white/80" />
-                    </div>
-
-                    <div className="mb-6">
-                      <div className="text-lg font-mono">{card.number}</div>
-                    </div>
-
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <div className="text-xs text-white/70 mb-1">
-                          CARD HOLDER
-                        </div>
-                        <div>{card.name}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-white/70 mb-1">
-                          EXPIRES
-                        </div>
-                        <div>{card.expiry}</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="bg-white/5 p-4">
-                    <div className="w-full flex justify-between items-center">
-                      <div>
-                        <div className="text-xs text-white/70">
-                          AVAILABLE BALANCE
-                        </div>
-                        <div className="text-lg font-semibold">
-                          {card.balance}
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-white/20 text-white hover:bg-white/10"
-                        >
-                          <Wallet className="h-4 w-4 mr-2" />
-                          Fund
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-white/20 text-white hover:bg-white/10"
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        )}
       </div>
     </DashboardLayout>
   );

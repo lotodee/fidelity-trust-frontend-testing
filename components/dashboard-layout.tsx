@@ -13,6 +13,7 @@ import {
   Bell,
   Menu,
   TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -37,15 +38,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { toast } = useToast();
   const isMobile = useIsMobile();
- const { register, isAuthenticated, error } = useAuthStore();
+  const { register, isAuthenticated, error } = useAuthStore();
 
-//  useEffect(() => {
-//    if (!isAuthenticated) {
-//      router.push("/auth/login");
-//    }
-//  }, [isAuthenticated, router]);
+  //  useEffect(() => {
+  //    if (!isAuthenticated) {
+  //      router.push("/auth/login");
+  //    }
+  //  }, [isAuthenticated, router]);
   const handleLogout = () => {
-logout()
+    logout();
 
     router.push("/");
   };
@@ -55,9 +56,9 @@ logout()
     { name: "Transactions", href: "/dashboard/transactions", icon: BarChart3 },
     { name: "Stocks", href: "/dashboard/stocks", icon: TrendingUp },
     { name: "Profile", href: "/dashboard/profile", icon: User },
+    { name: "Chat", href: "/dashboard/chat", icon: MessageSquare },
   ];
 
-   
   if (isMobile) {
     return (
       <div className="flex flex-col min-h-screen w-full bg-gray-50 scrollbar-hide">
@@ -132,7 +133,7 @@ logout()
         </nav>
 
         {/* Chat Button */}
-        <ChatButton />
+        {/* <ChatButton /> */}
       </div>
     );
   }
@@ -251,7 +252,7 @@ logout()
         </div>
 
         {/* Chat Button */}
-        <ChatButton />
+        {/* <ChatButton /> */}
       </div>
     </SidebarProvider>
   );
