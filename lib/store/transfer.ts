@@ -1,8 +1,9 @@
 import { create } from "zustand"
 
-export type TransferType = "zelle" | "wire" | "billpay" | "mailcheck" | "member"
+export type TransferType = "zelle" | "wire-transfer" | "billpay" | "mailcheck" | "member"
 
 interface TransferFormData {
+  recipientId?: string | undefined
   type: TransferType
   amount: string
   description: string
@@ -21,7 +22,7 @@ interface TransferFormData {
   // Mail Check
   recipientAddress?: string
   // Member to Member
-  memberEmail?: string
+  memberId?: string
   memberAccountNumber?: string
 }
 
@@ -42,7 +43,7 @@ interface TransferState {
 }
 
 const initialFormData: TransferFormData = {
-  type: "wire",
+  type: "wire-transfer",
   amount: "",
   description: "",
 }

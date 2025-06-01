@@ -58,6 +58,8 @@
     "immer": "latest",
     "input-otp": "latest",
     "jsonwebtoken": "latest",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.454.0",
     "mongoose": "latest",
     "morgan": "latest",

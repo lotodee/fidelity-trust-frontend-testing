@@ -11,6 +11,17 @@ interface User {
   email: string;
   role: "customer" | "admin";
   balance: number;
+  availableBalance: number;
+  currentBalance: number;
+  accountNumber: string;
+  isEmailVerified: boolean;
+  kycVerified: boolean;
+  balanceVisibility: {
+    available: boolean;
+    current: boolean;
+  };
+  personalInfo?: any;
+  lastLogin: Date;
 }
 
 interface AuthState {
@@ -27,7 +38,9 @@ interface AuthState {
     firstName: string,
     lastName: string,
     email: string,
-    password: string
+    password: string,
+    pin: string,
+    personalInfo?: any
   ) => Promise<void>;
   logout: (isAdmin?: boolean) => void;
   setUserBalance: (balance: number) => void;
@@ -49,10 +62,13 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-          const { token, user } = await authAPI.login({ email, password });
+          const response = await authAPI.login({ email, password });
+          const token = response.data.token;
+          const userData = response.data.user
+         
           authUtils.storeToken("token", token);
           set({
-            user,
+            user:userData,
             isAuthenticated: true,
             isLoading: false,
           });
@@ -91,7 +107,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (firstName, lastName, email, password) => {
+      register: async (
+        firstName,
+        lastName,
+        email,
+        password,
+        pin,
+        personalInfo
+      ) => {
         set({ isLoading: true, error: null });
         try {
           const { token, user } = await authAPI.register({
@@ -99,6 +122,18 @@ export const useAuthStore = create<AuthState>()(
             lastName,
             email,
             password,
+            pin,
+            personalInfo,
+            role: "customer",
+            balance: 0,
+            availableBalance: 0,
+            currentBalance: 0,
+            isEmailVerified: false,
+            kycVerified: false,
+            balanceVisibility: {
+              available: true,
+              current: true,
+            },
           });
           authUtils.storeToken("token", token);
           set({

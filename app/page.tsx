@@ -1,17 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { SplashScreen } from "@/components/splash-screen"
 import { LandingPage } from "@/components/landing-page"
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true)
   const router = useRouter()
+  const pathname = usePathname();
 
   // Check if user is logged in
   useEffect(() => {
-    const token = sessionStorage.getItem("auth-token")
+    const token = sessionStorage.getItem("token")
     if (token) {
       router.push("/dashboard")
     }

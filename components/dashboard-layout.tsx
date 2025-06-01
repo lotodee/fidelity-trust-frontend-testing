@@ -14,6 +14,9 @@ import {
   Menu,
   TrendingUp,
   MessageSquare,
+  Shield,
+  Settings,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -30,21 +33,22 @@ import {
 import { ChatButton } from "@/components/chat-button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/lib/store/auth";
+import { Card, CardContent } from "./ui/card";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [userName, setUserName] = useState("");
   const pathname = usePathname();
   const { logout } = useAuthStore();
+
   const router = useRouter();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { register, isAuthenticated, error } = useAuthStore();
+  const { isAuthenticated, error, user } = useAuthStore();
 
-  //  useEffect(() => {
-  //    if (!isAuthenticated) {
-  //      router.push("/auth/login");
-  //    }
-  //  }, [isAuthenticated, router]);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isAuthenticated, router]);
   const handleLogout = () => {
     logout();
 
@@ -55,53 +59,60 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { name: "Home", href: "/dashboard", icon: Home },
     { name: "Transactions", href: "/dashboard/transactions", icon: BarChart3 },
     { name: "Stocks", href: "/dashboard/stocks", icon: TrendingUp },
+    { name: "Cards", href: "/dashboard/cards", icon: CreditCard },
     { name: "Profile", href: "/dashboard/profile", icon: User },
-    { name: "Chat", href: "/dashboard/chat", icon: MessageSquare },
   ];
 
   if (isMobile) {
     return (
-      <div className="flex flex-col min-h-screen w-full bg-gray-50 scrollbar-hide">
+      <div className="flex flex-col min-h-screen w-full bg-gray-50">
         {/* Mobile Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center mb-2">
+        <header className="sticky top-0 z-30 bg-gradient-to-r from-emerald-800 to-emerald-900 px-4 py-3 flex justify-between items-center shadow-lg">
           <div className="flex items-center space-x-2">
-            {/* <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center"></div> */}
-            <div className="bg-navy-900 px-3 py-1.5 rounded-md">
+            <div className="bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-md">
               <span className="font-bold text-sm">
-                <span className="text-green-500">Fidelity</span>
+                <span className="text-emerald-300">Fidelity</span>
                 <span className="text-white">Trust</span>
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="relative">
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative text-white hover:bg-white/10"
+            >
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
             </Button>
-            <div
-              className="p-2 rounded-xl cursor-pointer bg-gray-100 hover:bg-transparent"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10"
               onClick={handleLogout}
             >
-              <LogOut className="h-4 w-4 hover:text-red-500" />
-            </div>
-            <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-xl shadow-sm">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
-                {userName.charAt(0).toUpperCase()}
+              <LogOut className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold">
+                {user?.firstName.charAt(0).toUpperCase()}
               </div>
-              <span className="font-medium text-gray-700">{userName}</span>
+              <span className="font-medium text-white text-sm">
+                {user?.firstName}
+              </span>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto w-full px-4 h-screen">
+        <main className="flex-1 overflow-auto w-full px-4 py-4">
           {children}
         </main>
 
         {/* Mobile Bottom Navigation */}
         <nav className="sticky bottom-0 z-30 bg-white border-t border-gray-200 w-full">
           <div className="grid grid-cols-4 h-16">
-            {navigationItems.map((item) => {
+            {navigationItems.slice(0, 4).map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Button
@@ -131,24 +142,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             })}
           </div>
         </nav>
-
-        {/* Chat Button */}
-        {/* <ChatButton /> */}
       </div>
     );
   }
 
-  // Desktop / Tablet layout: full width
+  // Desktop / Tablet layout
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
         {/* Sidebar */}
-        <Sidebar className="border-r border-gray-200 flex-shrink-0">
-          <SidebarHeader className="p-4">
+        <Sidebar className="border-r border-gray-200 flex-shrink-0 bg-gradient-to-b from-emerald-800 to-emerald-900">
+          <SidebarHeader className="p-6">
             <div className="flex items-center space-x-2">
-              <div className="bg-navy-900 px-3 py-1.5 rounded-md">
-                <span className="font-bold text-lg">
-                  <span className="text-green-500">Fidelity</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
+                <span className="font-bold text-xl">
+                  <span className="text-emerald-300">Fidelity</span>
                   <span className="text-white">Trust</span>
                 </span>
               </div>
@@ -156,7 +164,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarHeader>
 
           <SidebarContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-1 px-3">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -165,38 +173,56 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       asChild
                       isActive={isActive}
                       tooltip={item.name}
-                      className="py-4"
                     >
                       <button
                         onClick={() => router.push(item.href)}
-                        className={`flex items-center gap-4 px-4 my-2  py-6 w-full rounded-xl transition-all duration-200
+                        className={`flex items-center gap-4 px-4 py-3 w-full rounded-xl transition-all duration-200
                           ${
                             isActive
-                              ? "bg-gradient-to-r from-navy-800 to-navy-900 text-white  py-8 shadow-lg font-bold scale-105"
-                              : "text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 hover:scale-105 py-4"
+                              ? "bg-white/20 text-white font-medium"
+                              : "text-emerald-100 hover:bg-white/10 hover:text-white"
                           }
                         `}
                       >
                         <div
-                          className={`p-2.5 rounded-xl ${
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : "bg-emerald-400 text-white"
+                          className={`p-2 rounded-lg ${
+                            isActive ? "bg-white/20" : "bg-white/10"
                           }`}
                         >
                           <item.icon
-                            className={`transition-all duration-200 ${
-                              isActive ? "h-7 w-7" : "h-6 w-6"
+                            className={`h-5 w-5 transition-all duration-200 ${
+                              isActive ? "scale-110" : ""
                             }`}
                           />
                         </div>
-                        <span className="text-lg font-medium">{item.name}</span>
+                        <span className="text-sm font-medium">{item.name}</span>
                       </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
             </SidebarMenu>
+
+            <div className="px-3 mt-6">
+              <Card className="bg-white/10 backdrop-blur-sm border-0 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <MessageSquare className="h-10 w-10 text-emerald-200 mb-3" />
+                    <h3 className="font-medium text-white mb-2">
+                      Live Support
+                    </h3>
+                    <p className="text-emerald-100 text-sm mb-4">
+                      Get instant help from our support team
+                    </p>
+                    <a href="/dashboard/chat" className="w-full">
+                      <Button className="w-full bg-white text-emerald-600 hover:bg-emerald-50 h-9 text-sm">
+                        Start Chat
+                      </Button>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </SidebarContent>
 
           <SidebarFooter className="p-4">
@@ -204,12 +230,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={handleLogout}
-                  className="flex items-center gap-4 px-4 py-5 w-full text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+                  className="flex items-center gap-4 px-4 py-3 w-full text-emerald-100 hover:bg-white/10 hover:text-white transition-all duration-200 rounded-xl"
                 >
-                  <div className="p-2.5 rounded-xl bg-gray-100">
-                    <LogOut className="h-6 w-6" />
+                  <div className="p-2 rounded-lg bg-white/10">
+                    <LogOut className="h-5 w-5" />
                   </div>
-                  <span className="text-lg font-medium">Logout</span>
+                  <span className="text-sm font-medium">Logout</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -219,40 +245,43 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {/* Main content */}
         <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
           {/* Desktop Header */}
-          <header className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <header className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shadow-sm">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-emerald-500">
+              <h1 className="text-xl font-semibold text-emerald-600">
                 {pathname === "/dashboard" && "Dashboard"}
                 {pathname === "/dashboard/accounts" && "Accounts"}
                 {pathname === "/dashboard/transactions" && "Transactions"}
-                {pathname === "/dashboard/coins" && "Coins"}
+                {pathname === "/dashboard/stocks" && "Stocks"}
+                {pathname === "/dashboard/cards" && "Cards"}
+                {pathname === "/dashboard/security" && "Security"}
                 {pathname === "/dashboard/profile" && "Profile"}
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-gray-600 hover:text-emerald-600"
+              >
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
               </Button>
-              <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-xl shadow-sm">
+              <div className="flex items-center space-x-3 bg-gray-50 px-4 py-2 rounded-xl">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
-                  {userName.charAt(0).toUpperCase()}
+                  {user?.firstName.charAt(0).toUpperCase()}
                 </div>
-                <span className="font-medium text-gray-700">{userName}</span>
+                <span className="font-medium text-gray-700">
+                  {user?.firstName}
+                </span>
               </div>
             </div>
           </header>
 
           {/* Main Content */}
           <div className="flex-1 overflow-auto">
-            <div className="w-full bg-white rounded-2xl shadow-sm px-4 h-screen">
-              {children}
-            </div>
+            <div className="w-full bg-gray-50 px-6 py-6">{children}</div>
           </div>
         </div>
-
-        {/* Chat Button */}
-        {/* <ChatButton /> */}
       </div>
     </SidebarProvider>
   );

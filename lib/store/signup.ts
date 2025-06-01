@@ -30,7 +30,7 @@ interface SignupState {
   identityInfo: IdentityInfo
   pinInfo: PinInfo
   isLoading: boolean
-  kycStatus: "pending" | "verified" | "failed"
+  kycStatus:boolean
 
   // Actions
   setCurrentStep: (step: number) => void
@@ -38,7 +38,7 @@ interface SignupState {
   setIdentityInfo: (info: Partial<IdentityInfo>) => void
   setPinInfo: (info: Partial<PinInfo>) => void
   setLoading: (loading: boolean) => void
-  setKycStatus: (status: "pending" | "verified" | "failed") => void
+  setKycStatus: (status:boolean) => void
   resetForm: () => void
   nextStep: () => void
   prevStep: () => void
@@ -75,7 +75,7 @@ export const useSignupStore = create<SignupState>()(
       identityInfo: initialIdentityInfo,
       pinInfo: initialPinInfo,
       isLoading: false,
-      kycStatus: "pending",
+      kycStatus: false,
 
       setCurrentStep: (step) => set({ currentStep: step }),
 
@@ -105,7 +105,7 @@ export const useSignupStore = create<SignupState>()(
           identityInfo: initialIdentityInfo,
           pinInfo: initialPinInfo,
           isLoading: false,
-          kycStatus: "pending",
+          kycStatus:false,
         }),
 
       nextStep: () => {

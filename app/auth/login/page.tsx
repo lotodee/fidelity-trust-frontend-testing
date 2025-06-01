@@ -1,72 +1,83 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, ArrowLeft } from "lucide-react"
-import { authAPI } from "@/lib/api"
-import { authUtils } from "@/lib/store"
-import { useAuthStore } from "@/lib/store/auth"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
+import { authAPI } from "@/lib/api";
+import { authUtils } from "@/lib/store";
+import { useAuthStore } from "@/lib/store/auth";
 import { Informer } from "@/components/ui/informer";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
-  const router = useRouter()
-    const [informerMessage, setInformerMessage] = useState<{
-      message: string;
-      type: "success" | "error" | "info";
-    } | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const [informerMessage, setInformerMessage] = useState<{
+    message: {};
+    type: "success" | "error" | "info";
+  } | null>(null);
 
-   const { login, isAuthenticated, error } = useAuthStore();
+  const { login, isAuthenticated, error: err } = useAuthStore();
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated]);
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      // Use the auth API from lib
-    // await login(email, password )
+      await login(email, password);
 
-      // Store token in session storage using the utility
-      // authUtils.storeToken("auth-token", token)
-      // sessionStorage.setItem("user-role", user.role)
-      // sessionStorage.setItem("user-name", user.firstName)
-
- 
-           setInformerMessage({
-             message: "Login successful, Welcome back to FidelityTrust!",
-             type: "success",
-           });
+      setInformerMessage({
+        message: "Login successful, Welcome back to FidelityTrust!",
+        type: "success",
+      });
 
       setTimeout(() => {
-        router.push("/dashboard")
-},3000)
-
+        router.push("/dashboard");
+      }, 3000);
     } catch (error) {
-  
-           setInformerMessage({
-             message:
-               "Error logging in. Please check your credentials and try again.",
-             type: "error",
-           });
+      if (err) {
+        setInformerMessage({
+          message: err,
+          type: "error",
+        });
+      }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-900 to-green-500 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl"></div>
+      </div>
+
       {informerMessage && (
         <Informer
           message={informerMessage.message}
@@ -74,32 +85,39 @@ export default function LoginPage() {
           onClose={() => setInformerMessage(null)}
         />
       )}
+
       <Link
         href="/"
-        className="absolute top-4 left-4 text-white flex items-center hover:text-emerald-400 transition-colors"
+        className="absolute top-6 left-6 text-white/80 flex items-center hover:text-white transition-colors group"
       >
-        <ArrowLeft className="mr-2 h-4 w-4" />
+        <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
         Back to Home
       </Link>
 
-      <Card className="w-full max-w-md bg-navy-800 border-white/10 text-white">
+      <Card className="w-full max-w-md bg-white/5 backdrop-blur-xl border-white/10 text-white shadow-2xl">
         <CardHeader className="space-y-1">
-          <div className="flex justify-center items-center mb-6 gap-2">
-            <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center"></div>
-            <span className="font-bold text-lg">
-              <span className="text-green-500">Fidelity</span>
-              <span className="text-white">Trust</span>
+          <div className="flex justify-center items-center mb-8 gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <span className="font-bold text-xl">
+              <span className="text-emerald-400">Fidelity</span>
+              <span className="text-white/90">Trust</span>
             </span>
           </div>
-          <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
-          <CardDescription className="text-gray-400 text-center">
+          <CardTitle className="text-2xl text-center font-semibold">
+            Welcome back
+          </CardTitle>
+          <CardDescription className="text-white/60 text-center">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white/80">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -107,15 +125,17 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-navy-700 border-white/10"
+                className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
               />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-white/80">
+                  Password
+                </Label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-emerald-400 hover:underline"
+                  className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -128,12 +148,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-navy-700 border-white/10 pr-10"
+                  className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -145,27 +165,38 @@ export default function LoginPage() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-navy-900 font-medium"
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-emerald-500/30 hover:-translate-y-0.5"
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></div>
+                  Signing in...
+                </div>
+              ) : (
+                "Sign in"
+              )}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-gray-400">
+          <div className="text-center text-sm text-white/60">
             Don&apos;t have an account?{" "}
             <Link
               href="/auth/signup"
-              className="text-emerald-400 hover:underline"
+              className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
             >
               Sign up
             </Link>
           </div>
-
-      
         </CardFooter>
       </Card>
+
+      {/* Security Badge */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/40 text-sm">
+        <Shield className="h-4 w-4" />
+        <span>Bank-Grade Security</span>
+      </div>
     </div>
   );
 }

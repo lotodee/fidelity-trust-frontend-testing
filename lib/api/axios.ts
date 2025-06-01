@@ -38,7 +38,7 @@ api.interceptors.request.use(async (config: RetryConfig) => {
   }
 
   // Perform warm-up request before each API call
-  await performWarmupRequest()
+  // await performWarmupRequest()
 
   const isAdminRoute = config.url?.includes("/admin") // Check if the URL is an admin route
   const token = isAdminRoute ? authUtils.getToken("adminToken") : authUtils.getToken("token")
@@ -76,12 +76,12 @@ api.interceptors.response.use(
 
     // If it's a 401 error, handle authentication
     if (error.response && error.response.status === 401) {
-      authUtils.removeToken("token")
-      authUtils.removeToken("adminToken")
+      // authUtils.removeToken("token")
+      // authUtils.removeToken("adminToken")
       // Use window only on client side
-      if (typeof window !== "undefined") {
-        window.location.href = "/"
-      }
+      // if (typeof window !== "undefined") {
+      //   window.location.href = "/"
+      // }
     }
 
     // If we're out of retries or it's not a retryable error, reject the promise

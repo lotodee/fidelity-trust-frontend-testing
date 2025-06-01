@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import {
@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { Informer } from "@/components/ui/informer";
 import {
   Bell,
   Shield,
@@ -29,12 +29,83 @@ import {
   Key,
   MessageSquare,
 } from "lucide-react";
+import { usersAPI } from "@/lib/api/users";
+import { useAuthStore } from "@/lib/store/auth";
+
+interface UserData {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  balance: number;
+  availableBalance: number;
+  currentBalance: number;
+  accountNumber: string;
+  isEmailVerified: boolean;
+  kycVerified: boolean;
+  balanceVisibility: {
+    available: boolean;
+    current: boolean;
+  };
+  personalInfo?: {
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    ssn?: string;
+    driverLicense?: string;
+  };
+  lastLogin: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function Profile() {
   // Profile State
-  const [fullName, setFullName] = useState("John Doe");
-  const [email, setEmail] = useState("john.doe@example.com");
-  const [phone, setPhone] = useState("+1 (555) 000-0000");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [informer, setInformer] = useState<{
+    message: string;
+    type: "success" | "error" | "info" | "warning";
+    title?: string;
+  } | null>(null);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await usersAPI.getCurrentUser();
+      if (res.success && res.data) {
+        const userData: UserData = res.data;
+        setFirstName(userData.firstName);
+        setLastName(userData.lastName);
+        setEmail(userData.email);
+        setPhone(userData.personalInfo?.phone || "");
+        setAddress(userData.personalInfo?.address || "");
+        setCity(userData.personalInfo?.city || "");
+        setState(userData.personalInfo?.state || "");
+        setZipCode(userData.personalInfo?.zipCode || "");
+      }
+    } catch (error) {
+      setInformer({
+        title: "Error",
+        message: "Failed to fetch user data. Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
 
   // Password State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -59,62 +130,83 @@ export default function Profile() {
     authenticator: false,
   });
 
+  // PIN State
+  const [oldPin, setOldPin] = useState(["", "", "", ""]);
+  const [newPin, setNewPin] = useState(["", "", "", ""]);
+  const [confirmPin, setConfirmPin] = useState(["", "", "", ""]);
+  const [isPinLoading, setIsPinLoading] = useState(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+
   // UI State
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("profile");
-  const { toast } = useToast();
+  // const [activeTab, setActiveTab] = useState("profile");
 
   // Handle Profile Update
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    console.log("Profile Update:", {
-      fullName,
-      email,
-      phone,
-    });
-
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Profile updated",
-        description: "Your profile information has been updated successfully.",
+    try {
+      await usersAPI.updateUserInfo({
+        firstName,
+        lastName,
+        email,
       });
-    }, 1500);
+
+      setInformer({
+        title: "Profile Updated",
+        message: "Your profile information has been updated successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      setInformer({
+        title: "Update Failed",
+        message: "Failed to update profile. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle Password Change
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Password Change:", {
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    });
-
     if (newPassword !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Passwords don't match",
-        description: "Please make sure your new passwords match.",
+      setInformer({
+        title: "Password Mismatch",
+        message: "New password and confirm password do not match.",
+        type: "error",
       });
       return;
     }
 
-    setIsLoading(true);
+    setIsPasswordLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await usersAPI.changePassword({
+        currentPassword,
+        newPassword,
+      });
+
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast({
-        title: "Password changed",
-        description: "Your password has been changed successfully.",
+
+      setInformer({
+        title: "Password Updated",
+        message: "Your password has been changed successfully.",
+        type: "success",
       });
-    }, 1500);
+    } catch (error) {
+      setInformer({
+        title: "Update Failed",
+        message: "Failed to change password. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsPasswordLoading(false);
+    }
   };
 
   // Handle Notification Settings
@@ -127,20 +219,20 @@ export default function Profile() {
         ...prev,
         [setting]: !prev[setting as keyof typeof prev],
       }));
-      console.log("Email Notification Settings:", {
-        ...emailNotifications,
-        [setting]:
-          !emailNotifications[setting as keyof typeof emailNotifications],
+      setInformer({
+        title: "Settings Updated",
+        message: "Email notification preferences have been updated.",
+        type: "success",
       });
     } else {
       setPushNotifications((prev) => ({
         ...prev,
         [setting]: !prev[setting as keyof typeof prev],
       }));
-      console.log("Push Notification Settings:", {
-        ...pushNotifications,
-        [setting]:
-          !pushNotifications[setting as keyof typeof pushNotifications],
+      setInformer({
+        title: "Settings Updated",
+        message: "Push notification preferences have been updated.",
+        type: "success",
       });
     }
   };
@@ -151,110 +243,244 @@ export default function Profile() {
       ...prev,
       [method]: !prev[method],
     }));
-    console.log("2FA Settings:", {
-      ...twoFactorAuth,
-      [method]: !twoFactorAuth[method],
+    setInformer({
+      title: "2FA Updated",
+      message: `Two-factor authentication via ${method} has been ${
+        !twoFactorAuth[method] ? "enabled" : "disabled"
+      }.`,
+      type: "success",
     });
   };
 
   // Handle Support Actions
   const handleSupportAction = (action: string) => {
-    console.log("Support Action:", action);
-    toast({
+    setInformer({
       title: "Support Request",
-      description: `Your ${action} request has been initiated.`,
+      message: `Your ${action} request has been initiated.`,
+      type: "info",
     });
+  };
+
+  // Handle PIN input
+  const handlePinInput = (
+    index: number,
+    value: string,
+    type: "old" | "new" | "confirm"
+  ) => {
+    if (value.length > 1) value = value.slice(-1);
+    if (!/^\d*$/.test(value)) return;
+
+    switch (type) {
+      case "old":
+        const newOldPin = [...oldPin];
+        newOldPin[index] = value;
+        setOldPin(newOldPin);
+        if (value && index < 3) {
+          const nextInput = document.getElementById(`old-pin-${index + 1}`);
+          nextInput?.focus();
+        }
+        break;
+      case "new":
+        const newPinArray = [...newPin];
+        newPinArray[index] = value;
+        setNewPin(newPinArray);
+        if (value && index < 3) {
+          const nextInput = document.getElementById(`new-pin-${index + 1}`);
+          nextInput?.focus();
+        }
+        break;
+      case "confirm":
+        const newConfirmPin = [...confirmPin];
+        newConfirmPin[index] = value;
+        setConfirmPin(newConfirmPin);
+        if (value && index < 3) {
+          const nextInput = document.getElementById(`confirm-pin-${index + 1}`);
+          nextInput?.focus();
+        }
+        break;
+    }
+  };
+
+  // Handle PIN keydown
+  const handlePinKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+    type: "old" | "new" | "confirm"
+  ) => {
+    let currentPin: string[];
+    switch (type) {
+      case "old":
+        currentPin = oldPin;
+        break;
+      case "new":
+        currentPin = newPin;
+        break;
+      case "confirm":
+        currentPin = confirmPin;
+        break;
+    }
+
+    if (e.key === "Backspace" && !currentPin[index]) {
+      if (index > 0) {
+        const prevInput = document.getElementById(`${type}-pin-${index - 1}`);
+        prevInput?.focus();
+      }
+    }
+  };
+
+  // Handle PIN change submission
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (
+      oldPin.join("").length !== 4 ||
+      newPin.join("").length !== 4 ||
+      confirmPin.join("").length !== 4
+    ) {
+      setInformer({
+        title: "Invalid PIN",
+        message: "Please enter complete 4-digit PINs for all fields.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (newPin.join("") !== confirmPin.join("")) {
+      setInformer({
+        title: "PIN Mismatch",
+        message: "New PIN and confirm PIN do not match.",
+        type: "error",
+      });
+      return;
+    }
+
+    setIsPinLoading(true);
+
+    try {
+      await usersAPI.changePin({
+        currentPin: oldPin.join(""),
+        newPin: newPin.join(""),
+      });
+
+      setOldPin(["", "", "", ""]);
+      setNewPin(["", "", "", ""]);
+      setConfirmPin(["", "", "", ""]);
+
+      setInformer({
+        title: "PIN Updated",
+        message: "Your PIN has been changed successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      setInformer({
+        title: "Update Failed",
+        message: "Failed to change PIN. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsPinLoading(false);
+    }
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+      {informer && (
+        <Informer
+          message={informer.message}
+          type={informer.type}
+          title={informer.title}
+          onClose={() => setInformer(null)}
+        />
+      )}
+      <div className="max-w-7xl mx-auto space-y-6 px-3 sm:px-4 md:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Account Settings
             </h1>
-            <p className="text-gray-500 mt-2">
+            <p className="text-sm sm:text-base text-gray-500 mt-2">
               Manage your account preferences and settings
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card className="mb-6">
+            <CardContent className="p-2 sm:p-4">
+              <Tabs
+                defaultValue="profile"
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2 p-1 bg-gray-100/50 rounded-lg">
+                  <TabsTrigger
+                    value="profile"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-navy-900 data-[state=active]:shadow-sm rounded-md transition-colors"
+                  >
+                    <User className="h-4 w-4 mr-2 sm:mr-2.5 inline-block" />
+                    <span className="hidden sm:inline">Profile</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="security"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-navy-900 data-[state=active]:shadow-sm rounded-md transition-colors"
+                  >
+                    <Lock className="h-4 w-4 mr-2 sm:mr-2.5 inline-block" />
+                    <span className="hidden sm:inline">Security</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="notifications"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-navy-900 data-[state=active]:shadow-sm rounded-md transition-colors"
+                  >
+                    <Bell className="h-4 w-4 mr-2 sm:mr-2.5 inline-block" />
+                    <span className="hidden sm:inline">Notifications</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="support"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-navy-900 data-[state=active]:shadow-sm rounded-md transition-colors"
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2 sm:mr-2.5 inline-block" />
+                    <span className="hidden sm:inline">Support</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
             {/* Left Sidebar */}
-            <div className="space-y-6">
+            <div className="lg:col-span-3 space-y-4 sm:space-y-6">
               <Card className="bg-gradient-to-br from-navy-800 to-navy-950 text-white overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center ring-2 ring-white/20">
-                      <User className="h-8 w-8 text-white/80" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-white/10 flex items-center justify-center ring-2 ring-white/20">
+                      <User className="h-6 w-6 sm:h-8 sm:w-8 text-white/80" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">{fullName}</h3>
-                      <p className="text-white/70">{email}</p>
+                      <h3 className="font-semibold text-base sm:text-lg">
+                        {firstName} {lastName}
+                      </h3>
+                      <p className="text-sm text-white/70">{email}</p>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm">
-                      <Mail className="h-4 w-4 mr-2 text-white/70" />
-                      <span className="text-white/70">{email}</span>
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-center text-xs sm:text-sm">
+                      <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-white/70" />
+                      <span className="text-white/70 truncate">{email}</span>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <Phone className="h-4 w-4 mr-2 text-white/70" />
-                      <span className="text-white/70">{phone}</span>
+                    <div className="flex items-center text-xs sm:text-sm">
+                      <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-white/70" />
+                      <span className="text-white/70 truncate">{phone}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="max-h-max">
-                <CardContent className="p-6">
-                  <Tabs
-                    defaultValue="profile"
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="w-full"
-                  >
-                    <TabsList className="grid grid-cols-1 gap-2  p-2">
-                      <TabsTrigger
-                        value="profile"
-                        className="justify-start data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        <User className="h-4 w-4 mr-2" />
-                        Profile
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="security"
-                        className="justify-start data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        <Lock className="h-4 w-4 mr-2" />
-                        Security
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="notifications"
-                        className="justify-start data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        <Bell className="h-4 w-4 mr-2" />
-                        Notifications
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="support"
-                        className="justify-start data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        <HelpCircle className="h-4 w-4 mr-2" />
-                        Support
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
                 </CardContent>
               </Card>
             </div>
 
             {/* Main Content */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-9">
               <Tabs
                 defaultValue="profile"
                 value={activeTab}
@@ -279,15 +505,30 @@ export default function Profile() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <Label
-                              htmlFor="fullName"
+                              htmlFor="firstName"
                               className="text-sm font-medium"
                             >
-                              Full Name
+                              First Name
                             </Label>
                             <Input
-                              id="fullName"
-                              value={fullName}
-                              onChange={(e) => setFullName(e.target.value)}
+                              id="firstName"
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              className="h-10"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="lastName"
+                              className="text-sm font-medium"
+                            >
+                              Last Name
+                            </Label>
+                            <Input
+                              id="lastName"
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
                               className="h-10"
                             />
                           </div>
@@ -320,8 +561,78 @@ export default function Profile() {
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
                               className="h-10"
+                              disabled
                             />
                           </div>
+
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="address"
+                              className="text-sm font-medium"
+                            >
+                              Address
+                            </Label>
+                            <Input
+                              id="address"
+                              value={address}
+                              onChange={(e) => setAddress(e.target.value)}
+                              className="h-10"
+                              disabled
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="city"
+                              className="text-sm font-medium"
+                            >
+                              City
+                            </Label>
+                            <Input
+                              id="city"
+                              value={city}
+                              onChange={(e) => setCity(e.target.value)}
+                              className="h-10"
+                              disabled
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="state"
+                              className="text-sm font-medium"
+                            >
+                              State
+                            </Label>
+                            <Input
+                              id="state"
+                              value={state}
+                              onChange={(e) => setState(e.target.value)}
+                              className="h-10"
+                              disabled
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="zipCode"
+                              className="text-sm font-medium"
+                            >
+                              ZIP Code
+                            </Label>
+                            <Input
+                              id="zipCode"
+                              value={zipCode}
+                              onChange={(e) => setZipCode(e.target.value)}
+                              className="h-10"
+                              disabled
+                            />
+                          </div>
+                        </div>
+
+                        <div className="text-sm text-gray-500">
+                          Note: To update your contact information, please
+                          contact our support team.
                         </div>
 
                         <Button
@@ -411,10 +722,114 @@ export default function Profile() {
 
                           <Button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isPasswordLoading}
                             className="bg-emerald-500 hover:bg-emerald-600 h-10"
                           >
-                            {isLoading ? "Updating..." : "Update Password"}
+                            {isPasswordLoading
+                              ? "Updating..."
+                              : "Update Password"}
+                          </Button>
+                        </form>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-none shadow-lg">
+                      <CardHeader className="border-b pb-6">
+                        <CardTitle className="text-xl">Change PIN</CardTitle>
+                        <CardDescription>
+                          Update your 4-digit PIN for secure transactions.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <form onSubmit={handlePinSubmit} className="space-y-6">
+                          <div className="space-y-4">
+                            <Label className="text-sm font-medium">
+                              Current PIN
+                            </Label>
+                            <div className="flex gap-2">
+                              {oldPin.map((digit, index) => (
+                                <Input
+                                  key={index}
+                                  id={`old-pin-${index}`}
+                                  type="password"
+                                  maxLength={1}
+                                  value={digit}
+                                  onChange={(e) =>
+                                    handlePinInput(index, e.target.value, "old")
+                                  }
+                                  onKeyDown={(e) =>
+                                    handlePinKeyDown(index, e, "old")
+                                  }
+                                  className="h-12 w-12 text-center text-lg font-semibold"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <Label className="text-sm font-medium">
+                              New PIN
+                            </Label>
+                            <div className="flex gap-2">
+                              {newPin.map((digit, index) => (
+                                <Input
+                                  key={index}
+                                  id={`new-pin-${index}`}
+                                  type="password"
+                                  maxLength={1}
+                                  value={digit}
+                                  onChange={(e) =>
+                                    handlePinInput(index, e.target.value, "new")
+                                  }
+                                  onKeyDown={(e) =>
+                                    handlePinKeyDown(index, e, "new")
+                                  }
+                                  className="h-12 w-12 text-center text-lg font-semibold"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <Label className="text-sm font-medium">
+                              Confirm New PIN
+                            </Label>
+                            <div className="flex gap-2">
+                              {confirmPin.map((digit, index) => (
+                                <Input
+                                  key={index}
+                                  id={`confirm-pin-${index}`}
+                                  type="password"
+                                  maxLength={1}
+                                  value={digit}
+                                  onChange={(e) =>
+                                    handlePinInput(
+                                      index,
+                                      e.target.value,
+                                      "confirm"
+                                    )
+                                  }
+                                  onKeyDown={(e) =>
+                                    handlePinKeyDown(index, e, "confirm")
+                                  }
+                                  className="h-12 w-12 text-center text-lg font-semibold"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <Button
+                            type="submit"
+                            disabled={isPinLoading}
+                            className="bg-emerald-500 hover:bg-emerald-600 h-10"
+                          >
+                            {isPinLoading ? "Updating..." : "Update PIN"}
                           </Button>
                         </form>
                       </CardContent>
@@ -609,14 +1024,11 @@ export default function Profile() {
                       <Button
                         className="bg-emerald-500 hover:bg-emerald-600 h-10"
                         onClick={() => {
-                          console.log("Notification Settings Saved:", {
-                            email: emailNotifications,
-                            push: pushNotifications,
-                          });
-                          toast({
+                          setInformer({
                             title: "Settings Saved",
-                            description:
+                            message:
                               "Your notification preferences have been updated.",
+                            type: "success",
                           });
                         }}
                       >

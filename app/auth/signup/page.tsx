@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -45,56 +45,56 @@ const steps = [
 ];
 
 const states = [
-  "AL",
-  "AK",
-  "AZ",
-  "AR",
-  "CA",
-  "CO",
-  "CT",
-  "DE",
-  "FL",
-  "GA",
-  "HI",
-  "ID",
-  "IL",
-  "IN",
-  "IA",
-  "KS",
-  "KY",
-  "LA",
-  "ME",
-  "MD",
-  "MA",
-  "MI",
-  "MN",
-  "MS",
-  "MO",
-  "MT",
-  "NE",
-  "NV",
-  "NH",
-  "NJ",
-  "NM",
-  "NY",
-  "NC",
-  "ND",
-  "OH",
-  "OK",
-  "OR",
-  "PA",
-  "RI",
-  "SC",
-  "SD",
-  "TN",
-  "TX",
-  "UT",
-  "VT",
-  "VA",
-  "WA",
-  "WV",
-  "WI",
-  "WY",
+  "Alabama (AL)",
+  "Alaska (AK)",
+  "Arizona (AZ)",
+  "Arkansas (AR)",
+  "California (CA)",
+  "Colorado (CO)",
+  "Connecticut (CT)",
+  "Delaware (DE)",
+  "Florida (FL)",
+  "Georgia (GA)",
+  "Hawaii (HI)",
+  "Idaho (ID)",
+  "Illinois (IL)",
+  "Indiana (IN)",
+  "Iowa (IA)",
+  "Kansas (KS)",
+  "Kentucky (KY)",
+  "Louisiana (LA)",
+  "Maine (ME)",
+  "Maryland (MD)",
+  "Massachusetts (MA)",
+  "Michigan (MI)",
+  "Minnesota (MN)",
+  "Mississippi (MS)",
+  "Missouri (MO)",
+  "Montana (MT)",
+  "Nebraska (NE)",
+  "Nevada (NV)",
+  "New Hampshire (NH)",
+  "New Jersey (NJ)",
+  "New Mexico (NM)",
+  "New York (NY)",
+  "North Carolina (NC)",
+  "North Dakota (ND)",
+  "Ohio (OH)",
+  "Oklahoma (OK)",
+  "Oregon (OR)",
+  "Pennsylvania (PA)",
+  "Rhode Island (RI)",
+  "South Carolina (SC)",
+  "South Dakota (SD)",
+  "Tennessee (TN)",
+  "Texas (TX)",
+  "Utah (UT)",
+  "Vermont (VT)",
+  "Virginia (VA)",
+  "Washington (WA)",
+  "West Virginia (WV)",
+  "Wisconsin (WI)",
+  "Wyoming (WY)",
 ];
 
 export default function SignupPage() {
@@ -121,6 +121,11 @@ export default function SignupPage() {
     prevStep,
     resetForm,
   } = useSignupStore();
+
+  // Reset KYC status when component mounts
+  useEffect(() => {
+    setKycStatus(false);
+  }, [setKycStatus]);
 
   const { register } = useAuthStore();
 
@@ -182,7 +187,7 @@ export default function SignupPage() {
 
     // Simulate KYC verification
     setTimeout(() => {
-      setKycStatus("verified");
+      setKycStatus(true);
       setLoading(false);
       nextStep();
     }, 3000);
@@ -210,8 +215,22 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // Complete registration
-      // await register(personalInfo.firstName, personalInfo.lastName, personalInfo.email, identityInfo.password)
+      await register(
+        personalInfo.firstName,
+        personalInfo.lastName,
+        personalInfo.email,
+        identityInfo.password,
+        pinInfo.pin,
+        {
+          phone: personalInfo.phone,
+          address: personalInfo.address,
+          city: personalInfo.city,
+          state: personalInfo.state,
+          zipCode: personalInfo.zipCode,
+          ssn: identityInfo.ssn,
+          driverLicense: identityInfo.driverLicense,
+        }
+      );
 
       setInformerMessage({
         message: "Account created successfully! Welcome to FidelityTrust!",
@@ -233,7 +252,14 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-900 to-green-500 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl"></div>
+      </div>
+
       {informerMessage && (
         <Informer
           message={informerMessage.message}
@@ -244,32 +270,34 @@ export default function SignupPage() {
 
       <Link
         href="/"
-        className="absolute top-4 left-4 mt-2 ml-2 lg:mt-0 text-white flex items-center hover:text-emerald-400 transition-colors"
+        className="absolute top-6 left-6 text-white/80 flex items-center hover:text-white transition-colors group"
       >
-        <ArrowLeft className="mr-2 h-4 w-4" />
+        <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
         Back to Home
       </Link>
 
-      <Card className="w-full max-w-2xl bg-navy-800 border-white/10 text-white">
+      <Card className="w-full max-w-2xl bg-white/5 backdrop-blur-xl border-white/10 text-white shadow-2xl">
         <CardHeader className="space-y-6">
-          <div className="flex justify-center items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center"></div>
-            <span className="font-bold text-lg">
-              <span className="text-green-500">Fidelity</span>
-              <span className="text-white">Trust</span>
+          <div className="flex justify-center items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <span className="font-bold text-xl">
+              <span className="text-emerald-400">Fidelity</span>
+              <span className="text-white/90">Trust</span>
             </span>
           </div>
 
           <div className="space-y-4">
-            <CardTitle className="text-2xl text-center">
+            <CardTitle className="text-2xl text-center font-semibold">
               Create Your Account
             </CardTitle>
-            <CardDescription className="text-gray-400 text-center">
+            <CardDescription className="text-white/60 text-center">
               Complete the steps below to set up your FidelityTrust account
             </CardDescription>
 
             <div className="space-y-4">
-              <Progress value={progress} className="w-full" />
+              <Progress value={progress} className="w-full h-2 bg-white/10" />
 
               <div className="flex justify-between">
                 {steps.map((step) => {
@@ -283,27 +311,27 @@ export default function SignupPage() {
                       className="flex flex-col items-center space-y-2"
                     >
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
                           isCompleted
-                            ? "bg-green-500 border-green-500"
+                            ? "bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-500/20"
                             : isActive
-                            ? "border-emerald-400 bg-emerald-400/20"
-                            : "border-gray-600 bg-gray-700"
+                            ? "border-emerald-400 bg-emerald-400/20 shadow-lg shadow-emerald-400/10"
+                            : "border-white/20 bg-white/5"
                         }`}
                       >
                         {isCompleted ? (
-                          <Check className="h-5 w-5 text-white" />
+                          <Check className="h-6 w-6 text-white" />
                         ) : (
                           <Icon
-                            className={`h-5 w-5 ${
-                              isActive ? "text-emerald-400" : "text-gray-400"
+                            className={`h-6 w-6 ${
+                              isActive ? "text-emerald-400" : "text-white/40"
                             }`}
                           />
                         )}
                       </div>
                       <span
-                        className={`text-xs text-center ${
-                          isActive ? "text-emerald-400" : "text-gray-400"
+                        className={`text-sm text-center font-medium ${
+                          isActive ? "text-emerald-400" : "text-white/40"
                         }`}
                       >
                         {step.title}
@@ -326,30 +354,34 @@ export default function SignupPage() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <form onSubmit={handlePersonalInfoSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handlePersonalInfoSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name *</Label>
+                      <Label htmlFor="firstName" className="text-white/80">
+                        First Name *
+                      </Label>
                       <Input
                         id="firstName"
                         value={personalInfo.firstName}
                         onChange={(e) =>
                           setPersonalInfo({ firstName: e.target.value })
                         }
-                        className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                        className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                         placeholder="Enter your first name"
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Label htmlFor="lastName" className="text-white/80">
+                        Last Name *
+                      </Label>
                       <Input
                         id="lastName"
                         value={personalInfo.lastName}
                         onChange={(e) =>
                           setPersonalInfo({ lastName: e.target.value })
                         }
-                        className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                        className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                         placeholder="Enter your last name"
                         required
                       />
@@ -357,7 +389,9 @@ export default function SignupPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
+                    <Label htmlFor="email" className="text-white/80">
+                      Email Address *
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -365,14 +399,16 @@ export default function SignupPage() {
                       onChange={(e) =>
                         setPersonalInfo({ email: e.target.value })
                       }
-                      className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                      className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                       placeholder="you@example.com"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Label htmlFor="phone" className="text-white/80">
+                      Phone Number *
+                    </Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -380,52 +416,58 @@ export default function SignupPage() {
                       onChange={(e) =>
                         setPersonalInfo({ phone: e.target.value })
                       }
-                      className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                      className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                       placeholder="(555) 123-4567"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="address">Street Address *</Label>
+                    <Label htmlFor="address" className="text-white/80">
+                      Street Address *
+                    </Label>
                     <Input
                       id="address"
                       value={personalInfo.address}
                       onChange={(e) =>
                         setPersonalInfo({ address: e.target.value })
                       }
-                      className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                      className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                       placeholder="123 Main St, Apt 4B"
                       required
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="city">City *</Label>
+                      <Label htmlFor="city" className="text-white/80">
+                        City *
+                      </Label>
                       <Input
                         id="city"
                         value={personalInfo.city}
                         onChange={(e) =>
                           setPersonalInfo({ city: e.target.value })
                         }
-                        className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                        className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                         placeholder="New York"
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="state">State *</Label>
+                      <Label htmlFor="state" className="text-white/80">
+                        State *
+                      </Label>
                       <Select
                         value={personalInfo.state}
                         onValueChange={(value) =>
                           setPersonalInfo({ state: value })
                         }
                       >
-                        <SelectTrigger className="bg-navy-700 border-white/10">
+                        <SelectTrigger className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors">
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-navy-800 border-white/10">
                           {states.map((state) => (
                             <SelectItem key={state} value={state}>
                               {state}
@@ -435,14 +477,16 @@ export default function SignupPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="zipCode">ZIP Code *</Label>
+                      <Label htmlFor="zipCode" className="text-white/80">
+                        ZIP Code *
+                      </Label>
                       <Input
                         id="zipCode"
                         value={personalInfo.zipCode}
                         onChange={(e) =>
                           setPersonalInfo({ zipCode: e.target.value })
                         }
-                        className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                        className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                         placeholder="10001"
                         required
                       />
@@ -451,7 +495,7 @@ export default function SignupPage() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-navy-900"
+                    className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-emerald-500/30 hover:-translate-y-0.5"
                   >
                     Continue
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -468,22 +512,24 @@ export default function SignupPage() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <form onSubmit={handleIdentitySubmit} className="space-y-4">
+                <form onSubmit={handleIdentitySubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="ssn">Social Security Number *</Label>
+                    <Label htmlFor="ssn" className="text-white/80">
+                      Social Security Number *
+                    </Label>
                     <Input
                       id="ssn"
                       type="password"
                       value={identityInfo.ssn}
                       onChange={(e) => setIdentityInfo({ ssn: e.target.value })}
-                      className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                      className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                       placeholder="XXX-XX-XXXX"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="driverLicense">
+                    <Label htmlFor="driverLicense" className="text-white/80">
                       Driver's License / State ID No *
                     </Label>
                     <Input
@@ -492,32 +538,34 @@ export default function SignupPage() {
                       onChange={(e) =>
                         setIdentityInfo({ driverLicense: e.target.value })
                       }
-                      className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                      className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                       placeholder="DL12345678"
                       required
                     />
                   </div>
 
                   {isLoading && (
-                    <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
-                      <p className="text-blue-400">
+                    <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-6 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-3"></div>
+                      <p className="text-blue-400 font-medium">
                         Verifying your identity...
                       </p>
                     </div>
                   )}
 
-                  {kycStatus === "verified" && (
-                    <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 text-center">
-                      <Check className="h-8 w-8 text-green-400 mx-auto mb-2" />
-                      <p className="text-green-400">
+                  {kycStatus && (
+                    <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-6 text-center">
+                      <Check className="h-8 w-8 text-emerald-400 mx-auto mb-3" />
+                      <p className="text-emerald-400 font-medium">
                         Identity verified successfully!
                       </p>
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Create Password *</Label>
+                    <Label htmlFor="password" className="text-white/80">
+                      Create Password *
+                    </Label>
                     <div className="relative">
                       <Input
                         id="password"
@@ -526,14 +574,14 @@ export default function SignupPage() {
                         onChange={(e) =>
                           setIdentityInfo({ password: e.target.value })
                         }
-                        className="bg-navy-700 border-white/10 pr-10 placeholder:text-gray-400"
+                        className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors pr-10"
                         placeholder="Create a strong password"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -545,7 +593,9 @@ export default function SignupPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <Label htmlFor="confirmPassword" className="text-white/80">
+                      Confirm Password *
+                    </Label>
                     <Input
                       id="confirmPassword"
                       type={showPassword ? "text" : "password"}
@@ -553,7 +603,7 @@ export default function SignupPage() {
                       onChange={(e) =>
                         setIdentityInfo({ confirmPassword: e.target.value })
                       }
-                      className="bg-navy-700 border-white/10 placeholder:text-gray-400"
+                      className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors"
                       placeholder="Confirm your password"
                       required
                     />
@@ -564,7 +614,7 @@ export default function SignupPage() {
                       type="button"
                       variant="outline"
                       onClick={prevStep}
-                      className="flex-1 border-white/20 text-white bg-white/10"
+                      className="flex-1 border-white/20 text-white bg-white/5 hover:bg-white/10 transition-colors"
                     >
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
@@ -572,10 +622,19 @@ export default function SignupPage() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-navy-900"
+                      className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-emerald-500/30 hover:-translate-y-0.5"
                     >
-                      {isLoading ? "Verifying..." : "Continue"}
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      {isLoading ? (
+                        <div className="flex items-center">
+                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></div>
+                          Verifying...
+                        </div>
+                      ) : (
+                        <>
+                          Continue
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </div>
                 </form>
@@ -592,10 +651,10 @@ export default function SignupPage() {
               >
                 <form onSubmit={handlePinSubmit} className="space-y-6">
                   <div className="text-center space-y-2">
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-lg font-semibold text-white/90">
                       Create Your Transaction PIN
                     </h3>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-white/60 text-sm">
                       This 4-digit PIN will be used to authorize transactions
                       and secure your account
                     </p>
@@ -603,7 +662,9 @@ export default function SignupPage() {
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="pin">Create 4-Digit PIN *</Label>
+                      <Label htmlFor="pin" className="text-white/80">
+                        Create 4-Digit PIN *
+                      </Label>
                       <Input
                         id="pin"
                         type="password"
@@ -612,14 +673,16 @@ export default function SignupPage() {
                         onChange={(e) =>
                           setPinInfo({ pin: e.target.value.replace(/\D/g, "") })
                         }
-                        className="bg-navy-700 border-white/10 text-center text-2xl tracking-widest placeholder:text-gray-400"
+                        className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors text-center text-2xl tracking-widest"
                         placeholder="Enter 4 digits"
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPin">Confirm PIN *</Label>
+                      <Label htmlFor="confirmPin" className="text-white/80">
+                        Confirm PIN *
+                      </Label>
                       <Input
                         id="confirmPin"
                         type="password"
@@ -630,14 +693,14 @@ export default function SignupPage() {
                             confirmPin: e.target.value.replace(/\D/g, ""),
                           })
                         }
-                        className="bg-navy-700 border-white/10 text-center text-2xl tracking-widest placeholder:text-gray-400"
+                        className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors text-center text-2xl tracking-widest"
                         placeholder="Confirm 4 digits"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4">
+                  <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-6">
                     <p className="text-yellow-400 text-sm">
                       <strong>Important:</strong> Keep your PIN secure and don't
                       share it with anyone. You'll need this PIN to authorize
@@ -650,7 +713,7 @@ export default function SignupPage() {
                       type="button"
                       variant="outline"
                       onClick={prevStep}
-                      className="flex-1 border-white/20 text-white bg-white/10"
+                      className="flex-1 border-white/20 text-white bg-white/5 hover:bg-white/10 transition-colors"
                     >
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
@@ -658,11 +721,16 @@ export default function SignupPage() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-navy-900"
+                      className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-emerald-500/30 hover:-translate-y-0.5"
                     >
-                      {isLoading
-                        ? "Creating Account..."
-                        : "Complete Registration"}
+                      {isLoading ? (
+                        <div className="flex items-center">
+                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></div>
+                          Creating Account...
+                        </div>
+                      ) : (
+                        "Complete Registration"
+                      )}
                     </Button>
                   </div>
                 </form>
@@ -671,6 +739,12 @@ export default function SignupPage() {
           </AnimatePresence>
         </CardContent>
       </Card>
+
+      {/* Security Badge */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/40 text-sm">
+        <Shield className="h-4 w-4" />
+        <span>Bank-Grade Security</span>
+      </div>
     </div>
   );
 }

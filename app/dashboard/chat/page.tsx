@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Paperclip, Smile } from "lucide-react";
+import { TimeStamp } from "@/components/ui/time-stamp";
 
 interface Message {
   id: number;
@@ -119,9 +120,7 @@ export default function Chat() {
                           }`}
                         >
                           <p className="text-sm">{msg.content}</p>
-                          <p className="text-xs mt-1 opacity-70">
-                            {msg.timestamp.toLocaleTimeString()}
-                          </p>
+                          <TimeStamp timestamp={msg.timestamp} />
                         </div>
                       </div>
                     </div>
