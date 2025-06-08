@@ -37,6 +37,7 @@ import {
 import { useSignupStore } from "@/lib/store/signup";
 import { useAuthStore } from "@/lib/store/auth";
 import { Informer } from "@/components/ui/informer";
+import { RegistrationLoader } from "@/components/registration-loader";
 
 const steps = [
   { number: 1, title: "Personal Information", icon: User },
@@ -104,6 +105,20 @@ export default function SignupPage() {
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState<{
+    score: number;
+    message: string;
+  }>({ score: 0, message: "" });
+  const [registrationStatus, setRegistrationStatus] = useState<
+    "loading" | "success" | "error"
+  >("loading");
+  const [registrationProgress, setRegistrationProgress] = useState(0);
+  const [registrationMessage, setRegistrationMessage] = useState(
+    "Initializing your account..."
+  );
+  const [showLoader, setShowLoader] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   const {
     currentStep,
@@ -122,14 +137,41 @@ export default function SignupPage() {
     resetForm,
   } = useSignupStore();
 
-  // Reset KYC status when component mounts
+  // Reset KYC status when component mounts or when going back to step 2
   useEffect(() => {
-    setKycStatus(false);
-  }, [setKycStatus]);
+    if (currentStep === 2) {
+      setKycStatus(false);
+    }
+  }, [currentStep, setKycStatus]);
 
   const { register } = useAuthStore();
 
   const progress = (currentStep / 3) * 100;
+
+  const validatePassword = (password: string) => {
+    const minLength = 7;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    let score = 0;
+    let message = "";
+
+    if (password.length >= minLength) score += 1;
+    if (hasUpperCase) score += 1;
+    if (hasLowerCase) score += 1;
+    if (hasNumbers) score += 1;
+    if (hasSpecialChar) score += 1;
+
+    if (score === 0) message = "Password is too weak";
+    else if (score <= 2) message = "Password is weak";
+    else if (score <= 3) message = "Password is moderate";
+    else if (score <= 4) message = "Password is strong";
+    else message = "Password is very strong";
+
+    return { score, message };
+  };
 
   const handlePersonalInfoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,21 +205,42 @@ export default function SignupPage() {
   const handleIdentitySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (identityInfo.password !== identityInfo.confirmPassword) {
+    // Form validation
+    if (!identityInfo.ssn || !identityInfo.driverLicense) {
       setInformerMessage({
-        message: "Passwords don't match",
+        message: "Please fill in all required fields",
         type: "error",
       });
       return;
     }
 
-    if (
-      !identityInfo.ssn ||
-      !identityInfo.driverLicense ||
-      !identityInfo.password
-    ) {
+    if (!identityInfo.password || !identityInfo.confirmPassword) {
       setInformerMessage({
-        message: "Please fill in all required fields",
+        message: "Please enter and confirm your password",
+        type: "error",
+      });
+      return;
+    }
+
+    if (identityInfo.password.length < 7) {
+      setInformerMessage({
+        message: "Password must be at least 7 characters long",
+        type: "error",
+      });
+      return;
+    }
+
+    if (passwordStrength.score < 3) {
+      setInformerMessage({
+        message: "Please choose a stronger password",
+        type: "error",
+      });
+      return;
+    }
+
+    if (identityInfo.password !== identityInfo.confirmPassword) {
+      setInformerMessage({
+        message: "Passwords don't match",
         type: "error",
       });
       return;
@@ -212,44 +275,105 @@ export default function SignupPage() {
       return;
     }
 
-    setLoading(true);
+    setShowLoader(true);
+    setRegistrationStatus("loading");
+    setRegistrationProgress(0);
+    setRegistrationMessage("Initializing your account...");
+    setRetryCount(0);
 
-    try {
-      await register(
-        personalInfo.firstName,
-        personalInfo.lastName,
-        personalInfo.email,
-        identityInfo.password,
-        pinInfo.pin,
-        {
-          phone: personalInfo.phone,
-          address: personalInfo.address,
-          city: personalInfo.city,
-          state: personalInfo.state,
-          zipCode: personalInfo.zipCode,
-          ssn: identityInfo.ssn,
-          driverLicense: identityInfo.driverLicense,
+    const simulateProgress = () => {
+      const interval = setInterval(() => {
+        setRegistrationProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(interval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 1000);
+
+      return interval;
+    };
+
+    const progressInterval = simulateProgress();
+
+    const attemptRegistration = async () => {
+      try {
+        const response = await register(
+          personalInfo.firstName,
+          personalInfo.lastName,
+          personalInfo.email,
+          identityInfo.password,
+          pinInfo.pin,
+          {
+            phone: personalInfo.phone,
+            address: personalInfo.address,
+            city: personalInfo.city,
+            state: personalInfo.state,
+            zipCode: personalInfo.zipCode,
+            ssn: identityInfo.ssn,
+            driverLicense: identityInfo.driverLicense,
+          }
+        );
+
+        clearInterval(progressInterval);
+        setRegistrationProgress(100);
+        setRegistrationStatus("success");
+        setRegistrationMessage("Account created successfully!");
+
+        // Store the response in auth store
+        const { setUser } = useAuthStore.getState();
+        setUser(response.data.user);
+
+        // Set the signup flow flag
+        sessionStorage.setItem("showSignupFlow", "true");
+      } catch (error) {
+        clearInterval(progressInterval);
+
+        if (retryCount < maxRetries) {
+          setRetryCount((prev) => prev + 1);
+          setRegistrationMessage(
+            `Retrying registration (Attempt ${retryCount + 1}/${maxRetries})...`
+          );
+          setRegistrationProgress(0);
+          simulateProgress();
+          setTimeout(attemptRegistration, 2000);
+        } else {
+          setRegistrationStatus("error");
+          setRegistrationMessage(
+            "Failed to create account after multiple attempts."
+          );
         }
-      );
+      }
+    };
 
-      setInformerMessage({
-        message: "Account created successfully! Welcome to FidelityTrust!",
-        type: "success",
-      });
-
-      setTimeout(() => {
-        resetForm();
-        router.push("/dashboard");
-      }, 2000);
-    } catch (error) {
-      setInformerMessage({
-        message: "Registration failed. Please try again.",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
+    attemptRegistration();
   };
+
+  const handleRetry = () => {
+    setRetryCount(0);
+    setRegistrationStatus("loading");
+    setRegistrationProgress(0);
+    setRegistrationMessage("Retrying registration...");
+    handlePinSubmit(new Event("submit") as any);
+  };
+
+  const handleContinue = () => {
+    resetForm();
+    router.push("/dashboard");
+  };
+
+  if (showLoader) {
+    return (
+      <RegistrationLoader
+        status={registrationStatus}
+        progress={registrationProgress}
+        message={registrationMessage}
+        onRetry={handleRetry}
+        onContinue={handleContinue}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -544,7 +668,7 @@ export default function SignupPage() {
                     />
                   </div>
 
-                  {isLoading && (
+                  {isLoading && !kycStatus && (
                     <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-6 text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-3"></div>
                       <p className="text-blue-400 font-medium">
@@ -553,7 +677,7 @@ export default function SignupPage() {
                     </div>
                   )}
 
-                  {kycStatus && (
+                  {kycStatus && !isLoading && (
                     <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-6 text-center">
                       <Check className="h-8 w-8 text-emerald-400 mx-auto mb-3" />
                       <p className="text-emerald-400 font-medium">
@@ -571,9 +695,11 @@ export default function SignupPage() {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         value={identityInfo.password}
-                        onChange={(e) =>
-                          setIdentityInfo({ password: e.target.value })
-                        }
+                        onChange={(e) => {
+                          const newPassword = e.target.value;
+                          setIdentityInfo({ password: newPassword });
+                          setPasswordStrength(validatePassword(newPassword));
+                        }}
                         className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors pr-10"
                         placeholder="Create a strong password"
                         required
@@ -590,6 +716,88 @@ export default function SignupPage() {
                         )}
                       </button>
                     </div>
+                    {identityInfo.password && (
+                      <div className="space-y-2">
+                        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              passwordStrength.score <= 2
+                                ? "bg-red-500"
+                                : passwordStrength.score <= 3
+                                ? "bg-yellow-500"
+                                : passwordStrength.score <= 4
+                                ? "bg-blue-500"
+                                : "bg-green-500"
+                            }`}
+                            style={{
+                              width: `${(passwordStrength.score / 5) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <p
+                          className={`text-sm ${
+                            passwordStrength.score <= 2
+                              ? "text-red-400"
+                              : passwordStrength.score <= 3
+                              ? "text-yellow-400"
+                              : passwordStrength.score <= 4
+                              ? "text-blue-400"
+                              : "text-green-400"
+                          }`}
+                        >
+                          {passwordStrength.message}
+                        </p>
+                        <ul className="text-xs text-white/60 space-y-1">
+                          <li
+                            className={
+                              identityInfo.password.length >= 10
+                                ? "text-emerald-400"
+                                : ""
+                            }
+                          >
+                            • At least 10 characters long
+                          </li>
+                          <li
+                            className={
+                              /[A-Z]/.test(identityInfo.password)
+                                ? "text-emerald-400"
+                                : ""
+                            }
+                          >
+                            • Contains uppercase letter
+                          </li>
+                          <li
+                            className={
+                              /[a-z]/.test(identityInfo.password)
+                                ? "text-emerald-400"
+                                : ""
+                            }
+                          >
+                            • Contains lowercase letter
+                          </li>
+                          <li
+                            className={
+                              /\d/.test(identityInfo.password)
+                                ? "text-emerald-400"
+                                : ""
+                            }
+                          >
+                            • Contains number
+                          </li>
+                          <li
+                            className={
+                              /[!@#$%^&*(),.?":{}|<>]/.test(
+                                identityInfo.password
+                              )
+                                ? "text-emerald-400"
+                                : ""
+                            }
+                          >
+                            • Contains special character
+                          </li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">

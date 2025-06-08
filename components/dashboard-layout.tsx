@@ -34,24 +34,83 @@ import { ChatButton } from "@/components/chat-button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/lib/store/auth";
 import { Card, CardContent } from "./ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { NotificationDropdown } from "@/components/notification-dropdown";
+import { useNotificationStore } from "@/lib/store/notifications";
+import { WelcomeModal } from "@/components/welcome-modal";
+import { AnimatePresence } from "framer-motion";
+
+function LoadingLayout() {
+  return (
+    <div className="flex h-screen w-full bg-gray-50">
+      <div className="w-64 border-r border-gray-200 bg-gradient-to-b from-emerald-800 to-emerald-900 p-6">
+        <Skeleton className="h-8 w-32 mb-8" />
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+      <div className="flex-1">
+        <div className="h-16 border-b border-gray-200 bg-white px-6 flex items-center justify-between">
+          <Skeleton className="h-6 w-32" />
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-32" />
+          </div>
+        </div>
+        <div className="p-6">
+          <Skeleton className="h-8 w-64 mb-4" />
+          <Skeleton className="h-4 w-48 mb-8" />
+          <Skeleton className="h-[500px] w-full rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { logout } = useAuthStore();
+  const { initializeSocket, disconnectSocket } = useNotificationStore();
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { isAuthenticated, error, user } = useAuthStore();
+  const { isAuthenticated, initialized, initialize, user } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/auth/login");
+    initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    if (initialized && !isAuthenticated) {
+      window.location.href = "/auth/login";
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, initialized]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      initializeSocket();
+      return () => {
+        disconnectSocket();
+      };
+    }
+  }, [isAuthenticated, initializeSocket, disconnectSocket]);
+
+  // Check for signup flow
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const showSignupFlow = sessionStorage.getItem("showSignupFlow");
+      if (showSignupFlow === "true") {
+        setShowWelcomeModal(true);
+      }
+    }
+  }, []);
+
   const handleLogout = () => {
     logout();
-
     router.push("/");
   };
 
@@ -62,6 +121,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { name: "Cards", href: "/dashboard/cards", icon: CreditCard },
     { name: "Profile", href: "/dashboard/profile", icon: User },
   ];
+
+  if (!initialized) {
+    return <LoadingLayout />;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isMobile) {
     return (
@@ -77,14 +144,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative text-white hover:bg-white/10"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-            </Button>
+            <NotificationDropdown />
             <Button
               variant="ghost"
               size="icon"
@@ -111,8 +171,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Bottom Navigation */}
         <nav className="sticky bottom-0 z-30 bg-white border-t border-gray-200 w-full">
-          <div className="grid grid-cols-4 h-16">
-            {navigationItems.slice(0, 4).map((item) => {
+          <div className="grid grid-cols-5 h-16">
+            {navigationItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Button
@@ -142,6 +202,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             })}
           </div>
         </nav>
+
+        {/* Welcome Modal for Mobile */}
+        <AnimatePresence>
+          {showWelcomeModal && (
+            <WelcomeModal onClose={() => setShowWelcomeModal(false)} />
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -258,14 +325,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative text-gray-600 hover:text-emerald-600"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-              </Button>
+              <NotificationDropdown />
               <div className="flex items-center space-x-3 bg-gray-50 px-4 py-2 rounded-xl">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
                   {user?.firstName.charAt(0).toUpperCase()}
@@ -282,6 +342,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="w-full bg-gray-50 px-6 py-6">{children}</div>
           </div>
         </div>
+
+        {/* Welcome Modal for Desktop */}
+        <AnimatePresence>
+          {showWelcomeModal && (
+            <WelcomeModal onClose={() => setShowWelcomeModal(false)} />
+          )}
+        </AnimatePresence>
       </div>
     </SidebarProvider>
   );

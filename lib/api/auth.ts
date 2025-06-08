@@ -10,7 +10,7 @@ interface RegisterData {
   password: string;
   pin: string;
   personalInfo?: any;
-  role: "customer" | "admin";
+  role: "user" | "admin";
   balance: number;
   availableBalance: number;
   currentBalance: number;
@@ -52,6 +52,8 @@ export const authAPI = {
     }
 
     const response = await api.post("/auth/register", userData);
+
+    console.log("respose reg",response)
     return response.data;
   },
 

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
-import { authAPI } from "@/lib/api";
+import { authAPI } from "@/lib/api/auth";
 import { authUtils } from "@/lib/store";
 import { useAuthStore } from "@/lib/store/auth";
 import { Informer } from "@/components/ui/informer";
@@ -31,7 +31,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [informerMessage, setInformerMessage] = useState<{
-    message: {};
+    message: string;
     type: "success" | "error" | "info";
   } | null>(null);
 
@@ -42,25 +42,58 @@ export default function LoginPage() {
       router.push("/dashboard");
     }
   }, [isAuthenticated]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Form validation
+    if (!email.trim()) {
+      setInformerMessage({
+        message: "Please enter your email address",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!password.trim()) {
+      setInformerMessage({
+        message: "Please enter your password",
+        type: "error",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       await login(email, password);
 
+      // First navigate to dashboard
+      router.push("/dashboard");
+
+      // Then show success message
       setInformerMessage({
         message: "Login successful, Welcome back to FidelityTrust!",
         type: "success",
       });
-
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 3000);
-    } catch (error) {
-      if (err) {
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error.code === "ERR_NETWORK") {
         setInformerMessage({
-          message: err,
+          message:
+            "Network error: Unable to connect to the server. Please check your internet connection.",
+          type: "error",
+        });
+      } else if (error.response?.status === 401) {
+        setInformerMessage({
+          message: "Invalid email or password. Please try again.",
+          type: "error",
+        });
+      } else {
+        setInformerMessage({
+          message:
+            error.response?.data?.error ||
+            "An unexpected error occurred. Please try again.",
           type: "error",
         });
       }

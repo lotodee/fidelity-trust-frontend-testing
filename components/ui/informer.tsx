@@ -174,7 +174,7 @@ interface InformerProps {
 export function Informer({
   message,
   type = "info",
-  duration = 5000,
+  duration = 2000,
   onClose,
   title,
   showProgress = true,

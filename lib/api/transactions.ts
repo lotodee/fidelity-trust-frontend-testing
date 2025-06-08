@@ -7,6 +7,8 @@ export enum TransactionType {
   FUND_WALLET = "fundWallet",
   SEND_MONEY = "sendMoney",
   WITHDRAW = "withdraw",
+  CREDIT = "credit",
+  DEBIT = "debit",
 }
 
 export enum TransactionAction {
@@ -43,6 +45,9 @@ export interface CreateTransactionData {
 
 export interface UpdateTransactionData {
   status: TransactionStatus;
+  amount: number;
+  description: string;
+  data: Record<string, any>;
 }
 
 export const transactionsAPI = {
@@ -60,7 +65,7 @@ export const transactionsAPI = {
       return mockData.getAllTransactions();
     }
 
-    const response = await api.get("/admin/transactions");
+    const response = await api.get("/transaction/admin/get-all-transactions");
     return response.data;
   },
 
@@ -69,7 +74,9 @@ export const transactionsAPI = {
       return mockData.getTransactionById(transactionId);
     }
 
-    const response = await api.get(`/transactions/${transactionId}`);
+    const response = await api.get(
+      `/transaction/admin/get-transaction-by-id/${transactionId}`
+    );
     return response.data;
   },
 
@@ -78,21 +85,25 @@ export const transactionsAPI = {
       return mockData.createTransaction(transactionData);
     }
 
-    const response = await api.post("/transactions", transactionData);
+    const response = await api.post(
+      "/transaction/admin/create-transaction",
+      transactionData
+    );
     return response.data;
   },
 
-  updateTransactionStatus: async (
+  updateTransaction: async (
     transactionId: string,
-    status: TransactionStatus
+    updateData: UpdateTransactionData
   ) => {
     if (APP_STATE === "mock") {
-      return mockData.updateTransaction(transactionId, { status });
+      return mockData.updateTransaction(transactionId, updateData);
     }
 
-    const response = await api.put(`/transactions/${transactionId}/status`, {
-      status,
-    });
+    const response = await api.put(
+      `/transaction/admin/update-transaction-by-id/${transactionId}`,
+      updateData
+    );
     return response.data;
   },
 
@@ -135,8 +146,6 @@ export const transactionsAPI = {
     subtype: string;
     [key: string]: any;
   }) => {
-  
-
     const response = await api.post("/transaction/send", data);
     return response.data;
   },

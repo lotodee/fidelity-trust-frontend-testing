@@ -10,6 +10,25 @@ export interface User {
   email: string;
   role: string;
   balance: number;
+  availableBalance: number;
+  currentBalance: number;
+  accountNumber: string;
+  isEmailVerified: boolean;
+  kycVerified: boolean;
+  balanceVisibility: {
+    available: boolean;
+    current: boolean;
+  };
+  personalInfo?: {
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    ssn?: string;
+    driverLicense?: string;
+  };
+  lastLogin: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,7 +38,24 @@ export interface UpdateUserData {
   lastName?: string;
   email?: string;
   balance?: number;
+  availableBalance?: number;
+  currentBalance?: number;
   role?: string;
+  isEmailVerified?: boolean;
+  kycVerified?: boolean;
+  balanceVisibility?: {
+    available: boolean;
+    current: boolean;
+  };
+  personalInfo?: {
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    ssn?: string;
+    driverLicense?: string;
+  };
 }
 
 export const usersAPI = {
@@ -64,7 +100,7 @@ export const usersAPI = {
       return mockData.getAllUsers();
     }
 
-    const response = await api.get("/admin/user");
+    const response = await api.get("/user/admin/get-all-users");
     return response.data;
   },
 
@@ -73,7 +109,7 @@ export const usersAPI = {
       return mockData.getUserById(userId);
     }
 
-    const response = await api.get(`/admin/users/${userId}`);
+    const response = await api.get(`/user/admin/get-single-user/${userId}`);
     return response.data;
   },
 
@@ -83,7 +119,8 @@ export const usersAPI = {
     email: string;
     password: string;
     role?: string;
-    balance?: number;
+    currentBalance?: number;
+    availableBalance?: number;
   }) => {
     if (APP_STATE === "mock") {
       return mockData.createUser(userData);
@@ -98,7 +135,10 @@ export const usersAPI = {
       return mockData.updateUser(userId, userData);
     }
 
-    const response = await api.put(`/admin/users/${userId}`, userData);
+    const response = await api.put(
+      `/user/admin/update-user/${userId}`,
+      userData
+    );
     return response.data;
   },
 
@@ -107,7 +147,7 @@ export const usersAPI = {
       return mockData.deleteUser(userId);
     }
 
-    const response = await api.delete(`/admin/users/${userId}`);
+    const response = await api.delete(`/user/admin/delete-user/${userId}`);
     return response.data;
   },
 

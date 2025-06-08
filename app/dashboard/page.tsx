@@ -34,10 +34,11 @@ import {
   Bitcoin,
   Mail,
   User,
+  Copy,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/lib/store/auth";
-import { transactionsAPI } from "@/lib/api";
+import { transactionsAPI } from "@/lib/api/transactions";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
@@ -69,7 +70,7 @@ export default function Dashboard() {
   const [showAvailableBalance, setShowAvailableBalance] = useState(true);
   const [showCurrentBalance, setShowCurrentBalance] = useState(true);
   const [showKycModal, setShowKycModal] = useState(false);
-  const { user } = useAuthStore();
+  const { user, updateUserBalances } = useAuthStore();
   const [kycStatus, setKycStatus] = useState<"pending" | "verified" | "failed">(
     "pending"
   );
@@ -80,6 +81,7 @@ export default function Dashboard() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const fetchRecentTransactions = async () => {
     try {
@@ -100,7 +102,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchRecentTransactions();
-  }, []);
+    updateUserBalances();
+  }, [updateUserBalances]);
 
   const getCategoryIcon = (transaction: Transaction) => {
     switch (transaction.subtype) {
@@ -133,6 +136,26 @@ export default function Dashboard() {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
+
+  const formatBalance = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true,
+    }).format(amount);
   };
 
   // useEffect(() => {
@@ -190,7 +213,9 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="text-3xl font-bold">
-                ${showAvailableBalance ? user?.availableBalance : "••••••"}
+                {showAvailableBalance
+                  ? formatBalance(user?.availableBalance || 0)
+                  : "••••••"}
               </div>
 
               <div className="flex items-center gap-2 mt-2">
@@ -207,7 +232,9 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="text-xl font-semibold text-emerald-100">
-                ${showCurrentBalance ? user?.currentBalance : "••••••"}
+                {showCurrentBalance
+                  ? formatBalance(user?.currentBalance || 0)
+                  : "••••••"}
               </div>
             </div>
           </div>
@@ -216,7 +243,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"
+            className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"
           >
             <Button
               variant="outline"
@@ -225,17 +252,7 @@ export default function Dashboard() {
             >
               <Link href="/dashboard/fund-wallet">
                 <Wallet className="h-5 w-5" />
-                <span>Fund Wallet</span>
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-white/10 border-white/20 hover:bg-white/20 text-white flex items-center justify-center gap-2 h-auto py-3 transition-all duration-200 hover:scale-105"
-              asChild
-            >
-              <Link href="/dashboard/withdraw">
-                <ArrowUpRight className="h-5 w-5" />
-                <span>Withdraw</span>
+                <span>Add Money</span>
               </Link>
             </Button>
             <Button
@@ -248,7 +265,7 @@ export default function Dashboard() {
                 <span>Send Money</span>
               </Link>
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               className="bg-white/10 border-white/20 hover:bg-white/20 text-white flex items-center justify-center gap-2 h-auto py-3 transition-all duration-200 hover:scale-105"
               asChild
@@ -257,12 +274,12 @@ export default function Dashboard() {
                 <WalletCards className="h-5 w-5" />
                 <span>Cards</span>
               </Link>
-            </Button>
+            </Button> */}
           </motion.div>
         </motion.section>
 
         {/* Stats Section */}
-        <motion.section
+        {/* <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
@@ -325,7 +342,7 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-        </motion.section>
+        </motion.section> */}
 
         {/* Recent Transactions */}
         <motion.section

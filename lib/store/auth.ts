@@ -1,7 +1,8 @@
 //@ts-nocheck
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { authAPI, usersAPI } from "@/lib/api";
+import { authAPI } from "@/lib/api/auth";
+import { usersAPI } from "@/lib/api/users";
 import { authUtils } from "@/lib/store";
 
 interface User {
@@ -41,11 +42,23 @@ interface AuthState {
     password: string,
     pin: string,
     personalInfo?: any
-  ) => Promise<void>;
+  ) => Promise<{ data: { user: User } }>;
   logout: (isAdmin?: boolean) => void;
-  setUserBalance: (balance: number) => void;
+  updateUserBalances: () => Promise<void>;
   refreshUserData: () => Promise<void>;
   setError: (error: string | null) => void;
+  initialize: () => Promise<void>;
+  setUser: (user: User) => void;
+}
+
+interface AdminLoginResponse {
+  data: {
+    token: string;
+    firstName: string;
+    data?: {
+      firstName: string;
+    };
+  };
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -59,20 +72,45 @@ export const useAuthStore = create<AuthState>()(
 
       setError: (error) => set({ error }),
 
+      setUser: (user) => set({ user, isAuthenticated: true }),
+
+      initialize: async () => {
+        console.log("Auth: Initializing auth state");
+        const token = authUtils.getToken("token");
+        console.log("Auth: Token exists", !!token);
+
+        if (token) {
+          console.log("Auth: Setting authenticated state");
+          set({ isAuthenticated: true });
+          try {
+            console.log("Auth: Refreshing user data");
+            // await get().refreshUserData();
+            console.log("Auth: User data refreshed", get().user);
+          } catch (error) {
+            console.error("Auth: Error refreshing user data", error);
+          }
+        }
+        console.log("Auth: Marking as initialized");
+        set({ initialized: true });
+      },
+
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
           const response = await authAPI.login({ email, password });
+
           const token = response.data.token;
-          const userData = response.data.user
-         
+          const userData = response.data.user;
+
           authUtils.storeToken("token", token);
           set({
-            user:userData,
+            user: userData,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
         } catch (error: any) {
+          console.log("the error message", error);
           const errorMessage =
             error.response?.data?.message ||
             (error.code === "ERR_NETWORK"
@@ -83,19 +121,25 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      adminLogin: async (email, password) => {
+      adminLogin: async (
+        email: string,
+        password: string
+      ): Promise<AdminLoginResponse> => {
         set({ isLoading: true, error: null });
         try {
-          const { token, admin } = await authAPI.adminLogin({
+          const response = await authAPI.adminLogin({
             email,
             password,
           });
-          authUtils.storeToken("adminToken", token);
+
+          console.log("the admin login respons in lib", response.data);
+          authUtils.storeToken("adminToken", response.data.token);
           set({
-            user: admin,
+            user: response.data.data,
             isAuthenticated: true,
             isLoading: false,
           });
+          return response;
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message ||
@@ -117,7 +161,7 @@ export const useAuthStore = create<AuthState>()(
       ) => {
         set({ isLoading: true, error: null });
         try {
-          const { token, user } = await authAPI.register({
+          const response = await authAPI.register({
             firstName,
             lastName,
             email,
@@ -135,12 +179,18 @@ export const useAuthStore = create<AuthState>()(
               current: true,
             },
           });
+
+          const token = response.data.token;
+          const userData = response.data.user;
+
           authUtils.storeToken("token", token);
           set({
-            user,
+            user: userData,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
+          return response;
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message ||
@@ -159,15 +209,29 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, isAuthenticated: false });
       },
 
-      setUserBalance: (balance) => {
-        const user = get().user;
-        if (user) {
-          set({
-            user: {
-              ...user,
-              balance,
-            },
-          });
+      updateUserBalances: async () => {
+        try {
+          const response = await usersAPI.getCurrentUser();
+          const user = get().user;
+          if (user) {
+            set({
+              user: {
+                ...user,
+                firstName: response.data.firstName,
+                lastName: response.data.lastName,
+                balance: response.data.balance,
+                availableBalance: response.data.availableBalance,
+                currentBalance: response.data.currentBalance,
+                isEmailVerified: response.data.isEmailVerified,
+                kycVerified: response.data.kycVerified,
+                balanceVisibility: response.data.balanceVisibility,
+                personalInfo: response.data.personalInfo,
+                lastLogin: response.data.lastLogin,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Failed to update user data:", error);
         }
       },
 

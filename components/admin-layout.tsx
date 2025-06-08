@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
@@ -34,6 +34,10 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { authUtils } from "@/lib/store";
 import { motion } from "framer-motion";
+import { useAuthStore } from "@/lib/store/auth";
+import { truncate } from "lodash";
+import { NotificationDropdown } from "@/components/notification-dropdown";
+import { useNotificationStore } from "@/lib/store/notifications";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState("");
@@ -41,17 +45,43 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { user, logout } = useAuthStore();
+  const { initializeSocket, disconnectSocket } = useNotificationStore();
+
+  console.log("the curren tuser is", user);
+
+  useEffect(() => {
+    const adminToken = sessionStorage.getItem("adminToken");
+    const userRole = sessionStorage.getItem("user-role");
+
+    if (!adminToken || userRole !== "admin") {
+      router.push("/auth/login");
+      return;
+    }
+
+    // If we have both, ensure we're on admin dashboard if at root
+    if (pathname === "/admin") {
+      router.push("/admin/dashboard");
+    }
+  }, [pathname, router]);
+
+  useEffect(() => {
+    if (user) {
+      initializeSocket();
+      return () => {
+        disconnectSocket();
+      };
+    }
+  }, [user, initializeSocket, disconnectSocket]);
 
   const handleLogout = () => {
-    authUtils.removeToken("auth-token");
-    authUtils.removeToken("adminToken");
-    sessionStorage.removeItem("user-role");
-    sessionStorage.removeItem("user-name");
+    // authUtils.removeToken("auth-token");
+    // authUtils.removeToken("adminToken");
+    // sessionStorage.removeItem("user-role");
+    // sessionStorage.removeItem("user-name");
+    logout(true);
 
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of your account.",
-    });
+    //user the infomer here to tell them they are beein logged out
 
     router.push("/auth/admin-login");
   };
@@ -78,13 +108,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <NotificationDropdown />
             <Button
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/10"
+              onClick={handleLogout}
             >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-white"></span>
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </header>
@@ -216,10 +247,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-              </Button>
+              <NotificationDropdown />
               <div className="flex items-center space-x-2">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center text-white">
                   {userName.charAt(0).toUpperCase()}

@@ -28,6 +28,8 @@ import {
   Phone,
   Key,
   MessageSquare,
+  Wallet,
+  Copy,
 } from "lucide-react";
 import { usersAPI } from "@/lib/api/users";
 import { useAuthStore } from "@/lib/store/auth";
@@ -74,11 +76,13 @@ export default function Profile() {
   const [zipCode, setZipCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const { user, updateUserBalances } = useAuthStore();
   const [informer, setInformer] = useState<{
     message: string;
     type: "success" | "error" | "info" | "warning";
     title?: string;
   } | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const fetchCurrentUser = async () => {
     try {
@@ -105,6 +109,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetchCurrentUser();
+    updateUserBalances();
   }, []);
 
   // Password State
@@ -151,6 +156,7 @@ export default function Profile() {
         lastName,
         email,
       });
+      await updateUserBalances();
 
       setInformer({
         title: "Profile Updated",
@@ -382,6 +388,16 @@ export default function Profile() {
     }
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
+
   return (
     <DashboardLayout>
       {informer && (
@@ -474,6 +490,30 @@ export default function Profile() {
                       <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-white/70" />
                       <span className="text-white/70 truncate">{phone}</span>
                     </div>
+                    <div className="flex items-center justify-between text-xs sm:text-sm bg-white/10 p-2 rounded">
+                      <div className="flex items-center">
+                        <Wallet className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-white/70" />
+                        <span className="text-white/70">Account Number:</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-white/90">
+                          {user?.accountNumber}
+                        </span>
+                        <button
+                          onClick={() =>
+                            copyToClipboard(user?.accountNumber || "")
+                          }
+                          className="p-1 hover:bg-white/20 rounded transition-colors"
+                        >
+                          <Copy className="h-3 w-3 sm:h-4 sm:w-4 text-white/70" />
+                        </button>
+                      </div>
+                    </div>
+                    {copySuccess && (
+                      <div className="text-xs text-emerald-400 text-center">
+                        Account number copied!
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

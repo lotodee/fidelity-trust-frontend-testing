@@ -33,6 +33,7 @@ import {
   ArrowDownRight,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Informer } from "@/components/ui/informer";
 
 interface Stock {
   id: string;
@@ -134,6 +135,7 @@ export default function StocksPage() {
   const [pin, setPin] = useState("");
   const [showBuyDialog, setShowBuyDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showInformer, setShowInformer] = useState(false);
 
   const filteredStocks = stocks.filter(
     (stock) =>
@@ -157,6 +159,10 @@ export default function StocksPage() {
   const handleBuyStock = (stock: Stock) => {
     setSelectedStock(stock);
     setShowBuyDialog(true);
+    setShowInformer(true);
+    setTimeout(() => {
+      setShowInformer(false);
+    }, 3000);
   };
 
   const handleBuySubmit = async (e: React.FormEvent) => {
@@ -247,6 +253,14 @@ export default function StocksPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-8">
+        {showInformer && (
+          <Informer
+            type="info"
+            title="Coming Soon"
+            message="Stock trading functionality will be available soon. Stay tuned for updates!"
+            onClose={() => setShowInformer(false)}
+          />
+        )}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

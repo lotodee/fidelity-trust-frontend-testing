@@ -23,11 +23,12 @@ import {
   Download,
   Copy,
   Printer,
+  DollarSign,
 } from "lucide-react";
-import { transactionsAPI } from "@/lib/api";
+import { transactionsAPI } from "@/lib/api/transactions";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +70,9 @@ export default function Transactions() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [activeTab, setActiveTab] = useState<"incoming" | "outgoing">(
+    "incoming"
+  );
   const [informer, setInformer] = useState<{
     message: string;
     type: "success" | "error" | "info" | "warning";
@@ -87,7 +91,7 @@ export default function Transactions() {
           data: undefined,
         };
       });
-      console.log(flattened)
+      console.log(flattened);
       setTransactions(flattened);
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -100,14 +104,14 @@ export default function Transactions() {
     fetchTransactions();
   }, []);
 
-  const filteredTransactions = (category: string) => {
+  const filteredTransactions = () => {
     return transactions
       .filter((tx) => {
-        if (category === "all") return true;
-        if (category === "fund") return tx.type === "fundWallet";
-        if (category === "send") return tx.type === "sendMoney";
-        if (category === "withdraw") return tx.type === "withdraw";
-        return false;
+        if (activeTab === "incoming") {
+          return tx.action === "credit" || tx.type === "credit";
+        } else {
+          return tx.action === "debit" || tx.type === "debit";
+        }
       })
       .filter((tx) => {
         const searchLower = searchTerm.toLowerCase();
@@ -115,7 +119,8 @@ export default function Transactions() {
           tx.subtype.toLowerCase().includes(searchLower) ||
           tx.amount.toString().includes(searchTerm) ||
           tx.userId.firstName.toLowerCase().includes(searchLower) ||
-          tx.userId.lastName.toLowerCase().includes(searchLower)
+          tx.userId.lastName.toLowerCase().includes(searchLower) ||
+          tx.userId.accountNumber.includes(searchTerm)
         );
       });
   };
@@ -213,6 +218,13 @@ export default function Transactions() {
     });
   };
 
+  const truncateText = (text: string, maxLength: number = 30) => {
+    if (!text) return "";
+    return text.length > maxLength
+      ? `${text.substring(0, maxLength)}...`
+      : text;
+  };
+
   return (
     <DashboardLayout>
       {informer && (
@@ -244,91 +256,142 @@ export default function Transactions() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid grid-cols-4 mb-6">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="fund">Fund</TabsTrigger>
-                <TabsTrigger value="send">Send</TabsTrigger>
-                <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
-              </TabsList>
+            <div className="mb-6">
+              <div className="flex space-x-2 border-b">
+                <button
+                  onClick={() => setActiveTab("incoming")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                    activeTab === "incoming"
+                      ? "text-emerald-600"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Incoming
+                  {activeTab === "incoming" && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600"
+                      initial={false}
+                      transition={{ type: "spring", duration: 0.5 }}
+                    />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab("outgoing")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                    activeTab === "outgoing"
+                      ? "text-red-600"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Outgoing
+                  {activeTab === "outgoing" && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"
+                      initial={false}
+                      transition={{ type: "spring", duration: 0.5 }}
+                    />
+                  )}
+                </button>
+              </div>
+            </div>
 
-              {["all", "fund", "send", "withdraw"].map((category) => (
-                <TabsContent key={category} value={category}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isLoading ? (
+                  <div className="text-center py-10 text-gray-500">
+                    Loading transactions...
+                  </div>
+                ) : filteredTransactions().length > 0 ? (
                   <div className="space-y-4">
-                    {isLoading ? (
-                      <div className="text-center py-10 text-gray-500">
-                        Loading transactions...
-                      </div>
-                    ) : filteredTransactions(category).length > 0 ? (
-                      filteredTransactions(category).map((transaction) => (
-                        <motion.div
-                          key={transaction._id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex items-center justify-between py-4 border-b last:border-0 hover:bg-gray-50 transition-colors rounded-lg px-4 cursor-pointer"
-                          onClick={() => {
-                            setSelectedTransaction(transaction);
-                            setShowReceipt(true);
-                          }}
-                        >
-                          <div className="flex items-center space-x-4">
-                            <div
-                              className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                                transaction.action === "debit"
-                                  ? "bg-red-100 text-red-600"
-                                  : "bg-emerald-100 text-emerald-600"
-                              }`}
-                            >
-                              {getCategoryIcon(transaction)}
-                            </div>
-                            <div>
-                              <div className="font-medium flex items-center gap-2">
-                                {transaction.subtype}
-                                <Badge
-                                  variant="secondary"
-                                  className={`text-xs ${getStatusColor(
-                                    transaction.status
-                                  )}`}
-                                >
-                                  {transaction.status}
-                                </Badge>
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {format(
-                                  new Date(transaction.createdAt),
-                                  "MMM d, yyyy h:mm a"
-                                )}
-                              </div>
-                              {transaction.bitcoinAddress && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  BTC: {transaction.btcAmount}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                    {filteredTransactions().map((transaction) => (
+                      <motion.div
+                        key={transaction._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-center justify-between py-4 border-b last:border-0 hover:bg-gray-50 transition-colors rounded-lg px-4 cursor-pointer"
+                        onClick={() => {
+                          setSelectedTransaction(transaction);
+                          setShowReceipt(true);
+                        }}
+                      >
+                        <div className="flex items-center space-x-4">
                           <div
-                            className={`font-medium ${
+                            className={`h-10 w-10 rounded-full flex items-center justify-center ${
                               transaction.action === "debit"
-                                ? "text-red-600"
-                                : "text-emerald-600"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-emerald-100 text-emerald-600"
                             }`}
                           >
-                            {transaction.action === "debit" ? "-" : "+"}$
-                            {transaction.amount.toLocaleString()}
+                            {getCategoryIcon(transaction)}
                           </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="text-center py-10 text-gray-500">
-                        No transactions found.
-                      </div>
-                    )}
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              {transaction.subtype}
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs ${getStatusColor(
+                                  transaction.status
+                                )}`}
+                              >
+                                {transaction.status}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {format(
+                                new Date(transaction.createdAt),
+                                "MMM d, yyyy h:mm a"
+                              )}
+                            </div>
+                            {transaction.bitcoinAddress && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                BTC: {transaction.btcAmount}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div
+                          className={`font-medium ${
+                            transaction.action === "debit"
+                              ? "text-red-600"
+                              : "text-emerald-600"
+                          }`}
+                        >
+                          {transaction.action === "debit" ? "-" : "+"}$
+                          {transaction.amount.toLocaleString()}
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center py-10 text-gray-500"
+                  >
+                    <DollarSign className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                    <h3 className="text-lg font-medium">
+                      No transactions found
+                    </h3>
+                    <p className="mt-1">
+                      {searchTerm
+                        ? "Try adjusting your search"
+                        : `No ${activeTab} transactions available`}
+                    </p>
+                  </motion.div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </CardContent>
         </Card>
 
@@ -397,7 +460,7 @@ export default function Transactions() {
                         Transaction Type
                       </div>
                       <div className="font-medium">
-                        {selectedTransaction.subtype}
+                        {truncateText(selectedTransaction.subtype)}
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -405,7 +468,7 @@ export default function Transactions() {
                         Transaction ID
                       </div>
                       <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                        {selectedTransaction._id}
+                        {truncateText(selectedTransaction._id, 20)}
                       </div>
                     </div>
                   </div>
@@ -416,7 +479,7 @@ export default function Transactions() {
                         Account Number
                       </div>
                       <div className="font-medium">
-                        {selectedTransaction.userId.accountNumber}
+                        {truncateText(selectedTransaction.userId.accountNumber)}
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -424,8 +487,9 @@ export default function Transactions() {
                         Account Holder
                       </div>
                       <div className="font-medium">
-                        {selectedTransaction.userId.firstName}{" "}
-                        {selectedTransaction.userId.lastName}
+                        {truncateText(
+                          `${selectedTransaction.userId.firstName} ${selectedTransaction.userId.lastName}`
+                        )}
                       </div>
                     </div>
                   </div>
@@ -436,7 +500,7 @@ export default function Transactions() {
                         Bitcoin Address
                       </div>
                       <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded break-all">
-                        {selectedTransaction.bitcoinAddress}
+                        {truncateText(selectedTransaction.bitcoinAddress, 25)}
                       </div>
                     </div>
                   )}

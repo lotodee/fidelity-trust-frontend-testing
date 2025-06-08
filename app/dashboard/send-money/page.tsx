@@ -45,8 +45,9 @@ import {
 import { Informer } from "@/components/ui/informer";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AnimatePresence } from "framer-motion";
-import { usersAPI } from "@/lib/api";
+import { usersAPI } from "@/lib/api/users";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/store/auth";
 
 interface TransferFormData {
   recipientName?: string;
@@ -135,6 +136,7 @@ interface Member {
 
 export default function SendMoney() {
   const { toast } = useToast();
+  const { updateUserBalances } = useAuthStore();
   const {
     isModalOpen,
     selectedType,
@@ -281,9 +283,15 @@ export default function SendMoney() {
       const transactionData = getTransactionData(selectedType);
       const response = await transactionsAPI.sendMoney(transactionData);
 
-      setCurrentTransaction(response.data);
+      if (selectedType === "member") {
+        setCurrentTransaction(response.data.recipientTransaction);
+      } else {
+        setCurrentTransaction(response.data.senderTransaction);
+      }
+
       setPendingTransactions((prev) => [response.data, ...prev]);
       setShowSuccess(true);
+      await updateUserBalances();
 
       setTimeout(() => {
         setShowSuccess(false);
@@ -594,7 +602,7 @@ export default function SendMoney() {
               typeof option.icon === "string"
                 ? () => (
                     <img
-                      src={option.icon}
+                      src={option.icon as string}
                       alt={option.name}
                       className="h-8 w-8"
                     />
@@ -617,15 +625,7 @@ export default function SendMoney() {
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
-                        {typeof option.icon === "string" ? (
-                          <img
-                            src={option.icon}
-                            alt={option.name}
-                            className="h-8 w-8"
-                          />
-                        ) : (
-                          <option.icon className="h-8 w-8 text-emerald-500" />
-                        )}
+                        <IconComponent />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">

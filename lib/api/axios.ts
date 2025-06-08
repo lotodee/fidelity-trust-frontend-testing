@@ -14,7 +14,7 @@ interface RetryConfig extends InternalAxiosRequestConfig {
 const performWarmupRequest = async () => {
   try {
     const response = await axios.get(`${API_URL}`)
-    console.log("response from ping", response.data)
+ 
     await new Promise((res) => setTimeout(res, Math.floor(Math.random() * 201) + 200)) // Random delay between 200-400ms
   } catch (error) {
     console.warn("Warm-up request failed:", error)
@@ -47,7 +47,7 @@ api.interceptors.request.use(async (config: RetryConfig) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
-  console.log("token", isAdminRoute, token)
+
   return config
 })
 

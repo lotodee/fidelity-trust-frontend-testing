@@ -5,7 +5,8 @@ import { AdminLayout } from "@/components/admin-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { usersAPI, transactionsAPI } from "@/lib/api"
+import { usersAPI } from "@/lib/api/users"
+import { transactionsAPI } from "@/lib/api/transactions"
 import { Users, DollarSign, ArrowUpRight, ArrowDownRight, Activity } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -22,14 +23,14 @@ export default function AdminDashboard() {
       try {
         // Fetch users
         const usersResponse = await usersAPI.getAllUsers()
-        setUserCount(usersResponse.users.length)
+        setUserCount(usersResponse?.users?.length)
 
         // Fetch transactions
         const transactionsResponse = await transactionsAPI.getAllTransactions()
-        setTransactionCount(transactionsResponse.transactions.length)
+        setTransactionCount(transactionsResponse?.transactions?.length)
 
         // Get recent transactions (last 5)
-        const sortedTransactions = [...transactionsResponse.transactions]
+        const sortedTransactions = [...transactionsResponse?.transactions]
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 5)
 

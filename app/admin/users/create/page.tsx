@@ -44,7 +44,7 @@ export default function CreateUser() {
     password: "",
     pin: "",
     confirmPin: "",
-    role: "customer",
+    role: "user",
     balance: "0",
     availableBalance: "0",
     currentBalance: "0",
@@ -75,6 +75,8 @@ export default function CreateUser() {
       "password",
       "pin",
       "confirmPin",
+      "currentBalance",
+      "availableBalance",
     ];
     const missingFields = requiredFields.filter(
       (field) => !formData[field as keyof typeof formData]
@@ -115,7 +117,7 @@ export default function CreateUser() {
         pin: formData.pin,
         role: formData.role,
         ...(formData.role === "user" && {
-          balance: Number.parseFloat(formData.balance),
+       
           availableBalance: Number.parseFloat(formData.availableBalance),
           currentBalance: Number.parseFloat(formData.currentBalance),
         }),
@@ -360,10 +362,10 @@ export default function CreateUser() {
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-800">
                         <SelectItem
-                          value="customer"
+                          value="user"
                           className="text-white hover:bg-slate-800"
                         >
-                          Customer
+                          User
                         </SelectItem>
                         <SelectItem
                           value="admin"
@@ -375,34 +377,9 @@ export default function CreateUser() {
                     </Select>
                   </div>
 
-                  {formData.role === "customer" && (
+                  {formData.role === "user" && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="balance"
-                          className="text-slate-300 flex items-center gap-2"
-                        >
-                          <CreditCard className="h-4 w-4 text-blue-400" />
-                          Initial Balance
-                        </Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                            $
-                          </span>
-                          <Input
-                            id="balance"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="h-11 pl-8 bg-slate-800/50 border-slate-700 focus:border-blue-500/50 focus:ring-blue-500/20 transition-colors text-base text-white placeholder:text-slate-500"
-                            value={formData.balance}
-                            onChange={(e) =>
-                              handleInputChange("balance", e.target.value)
-                            }
-                            placeholder="0.00"
-                          />
-                        </div>
-                      </div>
+     
 
                       <div className="space-y-2">
                         <Label

@@ -18,9 +18,10 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, ArrowLeft, ShieldAlert } from "lucide-react";
-import { authAPI } from "@/lib/api";
+import { authAPI } from "@/lib/api/auth";
 import { authUtils } from "@/lib/store";
 import { Informer } from "@/components/ui/informer";
+import { useAuthStore } from "@/lib/store/auth";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
@@ -34,18 +35,20 @@ export default function AdminLoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const { adminLogin } = useAuthStore();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       // Use the auth API from lib
-      const response = await authAPI.adminLogin({
-        email: username,
+      const response = await adminLogin(
+        username,
         password,
-      });
+      );
 
-      console.log("the response in login",response.data)
+      console.log("the response in login",response?.data)
 
       // The response has a nested data structure
       if (response?.data?.token && response?.data?.firstName) {

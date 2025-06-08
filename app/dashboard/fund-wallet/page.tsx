@@ -34,6 +34,8 @@ import { cryptoAPI } from "@/lib/api/get-usdt";
 import { number } from "framer-motion";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuthStore } from "@/lib/store/auth";
+import { usersAPI } from "@/lib/api/users";
 
 interface PendingTransaction {
   id: string;
@@ -45,6 +47,7 @@ interface PendingTransaction {
 
 export default function FundWallet() {
   const [amount, setAmount] = useState("");
+  const { updateUserBalances } = useAuthStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [bitcoinAddress, setBitcoinAddress] = useState("");
   const [btcAmount, setBtcAmount] = useState<number | null>(null); // start as null
@@ -67,6 +70,8 @@ export default function FundWallet() {
     type: "success" | "error" | "info" | "warning";
     title?: string;
   } | null>(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
 
   useEffect(() => {
     const fetchBTC = async () => {
@@ -138,6 +143,7 @@ export default function FundWallet() {
       setCurrentTransaction(response.data);
       setPendingTransactions((prev) => [response.data, ...prev]);
       setShowSuccess(true);
+      await updateUserBalances();
 
       setTimeout(() => {
         setShowSuccess(false);
@@ -164,8 +170,8 @@ export default function FundWallet() {
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(bitcoinAddress);
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
     setCopied(true);
 
     setTimeout(() => {
@@ -174,10 +180,32 @@ export default function FundWallet() {
 
     setInformer({
       title: "Address copied",
-      message: "Bitcoin address copied to clipboard.",
+      message: "Address copied to clipboard.",
       type: "success",
     });
   };
+
+  const fetchUserData = async () => {
+    setIsLoadingUserData(true);
+    try {
+      const res = await usersAPI.getCurrentUser();
+      if (res.success && res.data) {
+        setUserData(res.data);
+      }
+    } catch (error) {
+      setInformer({
+        title: "Error",
+        message: "Failed to fetch account information. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsLoadingUserData(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   return (
     <DashboardLayout>
@@ -195,7 +223,7 @@ export default function FundWallet() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold mb-2">Fund Your Wallet</h1>
+          <h1 className="text-3xl font-bold mb-2">Add Money to you Fidelity Trust account</h1>
           <p className="text-gray-500">Choose your preferred funding method</p>
         </motion.div>
 
@@ -211,7 +239,7 @@ export default function FundWallet() {
             <TabsTrigger value="wire" disabled className="rounded-lg">
               Wire Transfer
             </TabsTrigger>
-            <TabsTrigger value="deposit" disabled className="rounded-lg">
+            <TabsTrigger value="deposit" className="rounded-lg">
               Direct Deposit
             </TabsTrigger>
           </TabsList>
@@ -365,7 +393,9 @@ export default function FundWallet() {
                                   className="rounded-r-none font-mono text-sm h-12"
                                 />
                                 <Button
-                                  onClick={copyToClipboard}
+                                  onClick={() =>
+                                    copyToClipboard(bitcoinAddress)
+                                  }
                                   variant="outline"
                                   className="rounded-l-none border-l-0 h-12"
                                 >
@@ -471,11 +501,96 @@ export default function FundWallet() {
           </TabsContent>
 
           <TabsContent value="deposit">
-            <Card>
+            <Card className="border-none shadow-lg">
               <CardHeader>
-                <CardTitle>Direct Deposit</CardTitle>
-                <CardDescription>This feature is coming soon.</CardDescription>
+                <CardTitle className="text-2xl">
+                  Direct Deposit Information
+                </CardTitle>
+                <CardDescription>
+                  Use these details to set up direct deposit with your employer
+                  or other income sources.
+                </CardDescription>
               </CardHeader>
+              <CardContent>
+                {isLoadingUserData ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-500">
+                          Bank Name
+                        </Label>
+                        <div className="p-3 bg-gray-50 rounded-lg font-medium">
+                          Greendot bank
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-500">
+                          Routing Number
+                        </Label>
+                        <div className="p-3 bg-gray-50 rounded-lg font-medium">
+                          124303120
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-500">
+                          Account Type
+                        </Label>
+                        <div className="p-3 bg-gray-50 rounded-lg font-medium">
+                          Checking
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-500">
+                          Account Number
+                        </Label>
+                        <div className="flex">
+                          <div className="flex-1 p-3 bg-gray-50 rounded-l-lg font-mono">
+                            {userData?.accountNumber || "Loading..."}
+                          </div>
+                          <Button
+                            variant="outline"
+                            className="rounded-l-none border-l-0"
+                            onClick={() => {
+                              if (userData?.accountNumber) {
+                                copyToClipboard(userData.accountNumber);
+                              }
+                            }}
+                          >
+                            {copied ? (
+                              <CheckCircle className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 p-4 bg-emerald-50 rounded-lg">
+                      <h3 className="font-medium text-emerald-800 mb-2">
+                        Important Information
+                      </h3>
+                      <ul className="text-sm text-emerald-700 space-y-2">
+                        <li>
+                          • Direct deposits typically take 1-2 business days to
+                          appear in your account
+                        </li>
+                        <li>
+                          • Make sure to provide these exact details to your
+                          employer or income source
+                        </li>
+                        <li>
+                          • Contact support if you need help setting up direct
+                          deposit
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
