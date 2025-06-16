@@ -16,34 +16,69 @@ interface User {
   };
 }
 
-interface Message {
-  _id: string;
-  content: string;
-  sender: "user" | "admin" | "customer";
-  timestamp: Date;
-  isRead: boolean;
+interface ExistingChat {
   userId: string;
+  userName: string;
+  userEmail: string;
+  lastMessage: string;
+  lastMessageAt: Date;
+  unreadCount: number;
+  messages: any[];
+  isOnline?: boolean;
+  isTyping?: boolean;
 }
 
 interface AdminChatStore {
   users: User[];
+  existingChats: ExistingChat[];
   isLoading: boolean;
   searchQuery: string;
+  selectedUser: User | null;
   setSearchQuery: (query: string) => void;
   fetchUsers: () => Promise<void>;
-  updateUserStatus: (userId: string, status: boolean) => void;
+  fetchExistingChats: () => Promise<void>;
+  updateUserStatus: (userId: string, isOnline: boolean) => void;
   updateUserTyping: (userId: string, isTyping: boolean) => void;
-  updateUserLastMessage: (userId: string, message: Message) => void;
+  updateUserLastMessage: (userId: string, message: any) => void;
   updateUserUnreadCount: (userId: string, count: number) => void;
+  selectUser: (user: User) => void;
 }
 
 export const useAdminChatStore = create<AdminChatStore>((set, get) => ({
   users: [],
+  existingChats: [],
   isLoading: false,
   searchQuery: "",
+  selectedUser: null,
 
   setSearchQuery: (query: string) => {
     set({ searchQuery: query });
+  },
+
+  fetchExistingChats: async () => {
+    try {
+      set({ isLoading: true });
+      const response = await chatAPI.getAllMessages();
+
+      if (response.success) {
+        const formattedChats = response.data.map((chat: any) => ({
+          userId: chat.userId,
+          userName: chat.userName,
+          userEmail: chat.userEmail,
+          lastMessage: chat.lastMessage,
+          lastMessageAt: new Date(chat.lastMessageAt),
+          unreadCount: chat.unreadCount,
+          messages: chat.messages,
+          isOnline: chat.isOnline,
+          isTyping: chat.isTyping,
+        }));
+        set({ existingChats: formattedChats });
+      }
+    } catch (error) {
+      console.error("Error fetching existing chats:", error);
+    } finally {
+      set({ isLoading: false });
+    }
   },
 
   fetchUsers: async () => {
@@ -60,14 +95,14 @@ export const useAdminChatStore = create<AdminChatStore>((set, get) => ({
               );
               const messages = chatResponse.data || [];
               const unreadCount = messages.filter(
-                (msg: Message) => msg.sender === "user" && !msg.isRead
+                (msg: any) => msg.isUser && !msg.isRead
               ).length;
               const lastMessage = messages[messages.length - 1];
 
               return {
                 ...user,
                 unreadCount,
-                isOnline: true, // Default to online
+                isOnline: true,
                 lastMessage: lastMessage
                   ? {
                       content: lastMessage.message,
@@ -82,7 +117,7 @@ export const useAdminChatStore = create<AdminChatStore>((set, get) => ({
               );
               return {
                 ...user,
-                isOnline: true, // Default to online even on error
+                isOnline: true,
               };
             }
           })
@@ -96,10 +131,13 @@ export const useAdminChatStore = create<AdminChatStore>((set, get) => ({
     }
   },
 
-  updateUserStatus: (userId: string, status: boolean) => {
+  updateUserStatus: (userId: string, isOnline: boolean) => {
     set((state) => ({
       users: state.users.map((user) =>
-        user._id === userId ? { ...user, isOnline: status } : user
+        user._id === userId ? { ...user, isOnline } : user
+      ),
+      existingChats: state.existingChats.map((chat) =>
+        chat.userId === userId ? { ...chat, isOnline } : chat
       ),
     }));
   },
@@ -109,10 +147,13 @@ export const useAdminChatStore = create<AdminChatStore>((set, get) => ({
       users: state.users.map((user) =>
         user._id === userId ? { ...user, isTyping } : user
       ),
+      existingChats: state.existingChats.map((chat) =>
+        chat.userId === userId ? { ...chat, isTyping } : chat
+      ),
     }));
   },
 
-  updateUserLastMessage: (userId: string, message: Message) => {
+  updateUserLastMessage: (userId: string, message: any) => {
     set((state) => ({
       users: state.users.map((user) =>
         user._id === userId
@@ -125,6 +166,15 @@ export const useAdminChatStore = create<AdminChatStore>((set, get) => ({
             }
           : user
       ),
+      existingChats: state.existingChats.map((chat) =>
+        chat.userId === userId
+          ? {
+              ...chat,
+              lastMessage: message.content,
+              lastMessageAt: message.timestamp,
+            }
+          : chat
+      ),
     }));
   },
 
@@ -133,6 +183,13 @@ export const useAdminChatStore = create<AdminChatStore>((set, get) => ({
       users: state.users.map((user) =>
         user._id === userId ? { ...user, unreadCount: count } : user
       ),
+      existingChats: state.existingChats.map((chat) =>
+        chat.userId === userId ? { ...chat, unreadCount: count } : chat
+      ),
     }));
+  },
+
+  selectUser: (user: User) => {
+    set({ selectedUser: user });
   },
 }));

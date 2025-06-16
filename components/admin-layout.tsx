@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
@@ -38,6 +38,7 @@ import { useAuthStore } from "@/lib/store/auth";
 import { truncate } from "lodash";
 import { NotificationDropdown } from "@/components/notification-dropdown";
 import { useNotificationStore } from "@/lib/store/notifications";
+import { NotificationHandler } from "@/components/notification-handler";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState("");
@@ -47,6 +48,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { user, logout } = useAuthStore();
   const { initializeSocket, disconnectSocket } = useNotificationStore();
+  const socketInitialized = useRef(false);
 
   console.log("the curren tuser is", user);
 
@@ -54,9 +56,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     const adminToken = sessionStorage.getItem("adminToken");
     const userRole = sessionStorage.getItem("user-role");
 
-    if (!adminToken || userRole !== "admin") {
-      router.push("/auth/login");
-      return;
+    if (!adminToken) {
+      router.push("/auth/entry");
+      return null;
     }
 
     // If we have both, ensure we're on admin dashboard if at root
@@ -65,24 +67,30 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router]);
 
+  // Handle socket connection
   useEffect(() => {
-    if (user) {
+    if (user && !socketInitialized.current) {
+      console.log("[AdminLayout] Initializing socket connection...");
       initializeSocket();
-      return () => {
-        disconnectSocket();
-      };
+      socketInitialized.current = true;
     }
+
+    return () => {
+      if (socketInitialized.current) {
+        console.log("[AdminLayout] Cleaning up socket connection...");
+        disconnectSocket();
+        socketInitialized.current = false;
+      }
+    };
   }, [user, initializeSocket, disconnectSocket]);
 
   const handleLogout = () => {
-    // authUtils.removeToken("auth-token");
-    // authUtils.removeToken("adminToken");
-    // sessionStorage.removeItem("user-role");
-    // sessionStorage.removeItem("user-name");
+    if (socketInitialized.current) {
+      console.log("[AdminLayout] Disconnecting socket before logout...");
+      disconnectSocket();
+      socketInitialized.current = false;
+    }
     logout(true);
-
-    //user the infomer here to tell them they are beein logged out
-
     router.push("/auth/admin-login");
   };
 
@@ -161,6 +169,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50">
+        <NotificationHandler />
         <Sidebar className="border-r border-gray-200 bg-white">
           <SidebarHeader className="p-4 bg-gradient-to-r from-red-600 to-red-800">
             <div className="flex items-center space-x-3">

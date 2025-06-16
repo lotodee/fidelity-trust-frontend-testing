@@ -14,15 +14,24 @@ interface TransactionData {
 
 interface Transaction {
   _id: string;
-  userId: User;
+  action: "credit" | "debit";
+  amount: number;
   type: string;
   subtype: string;
-  action: string;
-  amount: number;
   status: string;
-  data: TransactionData;
   createdAt: string;
   updatedAt: string;
+  description?: string;
+  userId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    accountNumber: string;
+  };
+  bitcoinAddress?: string;
+  btcAmount?: number;
+  paymentMethod?: string;
 }
 
 interface AdminTransactionStore {
@@ -37,6 +46,18 @@ interface AdminTransactionStore {
   updateDynamicField: (index: number, key: string, value: string) => void;
   removeDynamicField: (index: number) => void;
   clearDynamicFields: () => void;
+}
+
+interface AdminTransactionsStore {
+  transactions: Transaction[];
+  setTransactions: (transactions: Transaction[]) => void;
+  addTransaction: (transaction: Transaction) => void;
+  updateTransaction: (
+    transactionId: string,
+    updatedTransaction: Partial<Transaction>
+  ) => void;
+  deleteTransaction: (transactionId: string) => void;
+  clearTransactions: () => void;
 }
 
 export const useAdminTransactionStore = create<AdminTransactionStore>(
@@ -64,5 +85,29 @@ export const useAdminTransactionStore = create<AdminTransactionStore>(
         dynamicFields: state.dynamicFields.filter((_, i) => i !== index),
       })),
     clearDynamicFields: () => set({ dynamicFields: [] }),
+  })
+);
+
+export const useAdminTransactionsStore = create<AdminTransactionsStore>(
+  (set) => ({
+    transactions: [],
+    setTransactions: (transactions) => set({ transactions }),
+    addTransaction: (transaction) =>
+      set((state) => ({ transactions: [...state.transactions, transaction] })),
+    updateTransaction: (transactionId, updatedTransaction) =>
+      set((state) => ({
+        transactions: state.transactions.map((transaction) =>
+          transaction._id === transactionId
+            ? { ...transaction, ...updatedTransaction }
+            : transaction
+        ),
+      })),
+    deleteTransaction: (transactionId) =>
+      set((state) => ({
+        transactions: state.transactions.filter(
+          (transaction) => transaction._id !== transactionId
+        ),
+      })),
+    clearTransactions: () => set({ transactions: [] }),
   })
 );

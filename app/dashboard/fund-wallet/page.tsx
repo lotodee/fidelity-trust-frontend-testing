@@ -15,7 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Bitcoin, Loader2, Copy, CheckCircle, QrCode } from "lucide-react";
+import {
+  Bitcoin,
+  Loader2,
+  Copy,
+  CheckCircle,
+  QrCode,
+  AlertCircle,
+} from "lucide-react";
 import Image from "next/image";
 import {
   transactionsAPI,
@@ -72,6 +79,8 @@ export default function FundWallet() {
   } | null>(null);
   const [userData, setUserData] = useState<any>(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(false);
+  const [showWireTransferModal, setShowWireTransferModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("bitcoin");
 
   useEffect(() => {
     const fetchBTC = async () => {
@@ -207,6 +216,20 @@ export default function FundWallet() {
     fetchUserData();
   }, []);
 
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    if (value === "wire") {
+      setShowWireTransferModal(true);
+      // Auto redirect to direct deposit after 3 seconds
+      setTimeout(() => {
+        setActiveTab("deposit");
+        setShowWireTransferModal(false);
+      }, 3000);
+    } else {
+      setActiveTab(value);
+    }
+  };
+
   return (
     <DashboardLayout>
       {informer && (
@@ -223,11 +246,17 @@ export default function FundWallet() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold mb-2">Add Money to you Fidelity Trust account</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            Add Money to you Fidelity Trust account
+          </h1>
           <p className="text-gray-500">Choose your preferred funding method</p>
         </motion.div>
 
-        <Tabs defaultValue="bitcoin" className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-3 mb-8 p-1 bg-gray-100 rounded-xl">
             <TabsTrigger
               value="bitcoin"
@@ -236,7 +265,7 @@ export default function FundWallet() {
               <Bitcoin className="w-4 h-4 mr-2" />
               Bitcoin
             </TabsTrigger>
-            <TabsTrigger value="wire" disabled className="rounded-lg">
+            <TabsTrigger value="wire" className="rounded-lg">
               Wire Transfer
             </TabsTrigger>
             <TabsTrigger value="deposit" className="rounded-lg">
@@ -492,11 +521,15 @@ export default function FundWallet() {
           </TabsContent>
 
           <TabsContent value="wire">
-            <Card>
-              <CardHeader>
-                <CardTitle>Wire Transfer</CardTitle>
-                <CardDescription>This feature is coming soon.</CardDescription>
-              </CardHeader>
+            <Card className="border-none shadow-lg relative">
+              <div className={`${showWireTransferModal ? "blur-sm" : ""}`}>
+                <CardHeader>
+                  <CardTitle>Wire Transfer</CardTitle>
+                  <CardDescription>
+                    This feature is coming soon.
+                  </CardDescription>
+                </CardHeader>
+              </div>
             </Card>
           </TabsContent>
 
@@ -677,6 +710,31 @@ export default function FundWallet() {
                 </div>
               </motion.div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Wire Transfer Modal */}
+        <Dialog
+          open={showWireTransferModal}
+          onOpenChange={setShowWireTransferModal}
+        >
+          <DialogContent className="sm:max-w-md">
+            <div className="flex flex-col items-center justify-center py-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4"
+              >
+                <AlertCircle className="w-8 h-8 text-yellow-500" />
+              </motion.div>
+              <h3 className="text-xl font-semibold mb-2 text-center">
+                Not Eligible for Wire Transfer
+              </h3>
+              <p className="text-gray-500 text-center">
+                Wire transfer services are currently not available for your
+                account. Please use Bitcoin or Direct Deposit instead.
+              </p>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

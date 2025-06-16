@@ -43,12 +43,6 @@ export function LandingPage() {
           >
             Security
           </Link>
-          <Link
-            href="#accounts"
-            className="hover:text-white/80 transition-colors"
-          >
-            Accounts
-          </Link>
           <Link href="#about" className="hover:text-white/80 transition-colors">
             About
           </Link>
@@ -135,6 +129,49 @@ export function LandingPage() {
 
           {/* Feature Content */}
           <div className="relative">
+            {/* Security */}
+            <div className="flex flex-col md:flex-row-reverse items-center gap-12 mb-24">
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/5 border border-white/10">
+                  <ShieldCheck className="h-5 w-5 text-white mr-2" />
+                  <span className="text-sm font-medium">Advanced Security</span>
+                </div>
+                <h3 className="text-3xl font-bold">Bank-Grade Protection</h3>
+                <p className="text-white/70 text-lg leading-relaxed">
+                  Your security is our priority. Benefit from multi-factor
+                  authentication, biometric security, and real-time fraud
+                  monitoring.
+                </p>
+                <Link href="/auth/signup">
+                  <Button className="bg-white text-navy-900 hover:bg-white/90">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="flex-1 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-2xl transform -rotate-3"></div>
+                <div className="relative bg-white/5 p-6 rounded-2xl border border-white/10">
+                  <div className="aspect-video rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 p-4">
+                    <div className="h-full flex items-center justify-center">
+                      <div className="grid grid-cols-3 gap-4 w-full max-w-sm">
+                        {[1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className="aspect-square rounded-xl bg-white/10 border border-white/20 flex items-center justify-center"
+                          >
+                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full bg-white/30"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Virtual Cards */}
             <div className="flex flex-col md:flex-row items-center gap-12 mb-24">
               <div className="flex-1 space-y-6">
@@ -148,6 +185,12 @@ export function LandingPage() {
                   system. Create instant digital cards, set spending limits, and
                   freeze them anytime with a single tap.
                 </p>
+                <Link href="/auth/signup">
+                  <Button className="bg-white text-navy-900 hover:bg-white/90">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
               <div className="flex-1 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl transform rotate-3"></div>
@@ -186,6 +229,12 @@ export function LandingPage() {
                   advanced analytics. Visualize your financial patterns and make
                   informed decisions.
                 </p>
+                <Link href="/auth/signup">
+                  <Button className="bg-white text-navy-900 hover:bg-white/90">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
               <div className="flex-1 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl transform -rotate-3"></div>
@@ -216,7 +265,7 @@ export function LandingPage() {
             </div>
 
             {/* Global Transfers */}
-            <div className="flex flex-col md:flex-row items-center gap-12 mb-24">
+            <div className="flex flex-col md:flex-row items-center gap-12">
               <div className="flex-1 space-y-6">
                 <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/5 border border-white/10">
                   <Globe className="h-5 w-5 text-white mr-2" />
@@ -228,6 +277,17 @@ export function LandingPage() {
                   exchange rates and minimal fees with our global transfer
                   network.
                 </p>
+                <div className="flex items-center gap-4">
+                  <Link href="/auth/signup">
+                    <Button className="bg-white text-navy-900 hover:bg-white/90">
+                      Get Started
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <span className="text-emerald-400 text-sm font-medium">
+                    Coming Soon
+                  </span>
+                </div>
               </div>
               <div className="flex-1 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-red-500/10 rounded-2xl transform rotate-3"></div>
@@ -259,38 +319,76 @@ export function LandingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            {/* Security */}
-            <div className="flex flex-col md:flex-row-reverse items-center gap-12">
-              <div className="flex-1 space-y-6">
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/5 border border-white/10">
-                  <ShieldCheck className="h-5 w-5 text-white mr-2" />
-                  <span className="text-sm font-medium">Advanced Security</span>
-                </div>
-                <h3 className="text-3xl font-bold">Bank-Grade Protection</h3>
-                <p className="text-white/70 text-lg leading-relaxed">
-                  Your security is our priority. Benefit from multi-factor
-                  authentication, biometric security, and real-time fraud
-                  monitoring.
-                </p>
+      {/* About Section */}
+      <section id="about" className="bg-white/5 py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                About FidelityTrust
+              </h2>
+              <p className="text-white/70 mb-8">
+                We're revolutionizing the banking experience by combining
+                cutting-edge technology with traditional banking values. Our
+                mission is to make financial services accessible, secure, and
+                efficient for everyone.
+              </p>
+              <div className="space-y-4">
+                {[
+                  "Founded in 2015",
+                  "Serving over 5 million customers",
+                  "Available in 150+ countries",
+                  "24/7 customer support",
+                  "Industry-leading security",
+                ].map((feature) => (
+                  <div key={feature} className="flex items-center space-x-3">
+                    <div className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-white/90">{feature}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex-1 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-2xl transform -rotate-3"></div>
-                <div className="relative bg-white/5 p-6 rounded-2xl border border-white/10">
-                  <div className="aspect-video rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 p-4">
-                    <div className="h-full flex items-center justify-center">
-                      <div className="grid grid-cols-3 gap-4 w-full max-w-sm">
-                        {[1, 2, 3].map((i) => (
-                          <div
-                            key={i}
-                            className="aspect-square rounded-xl bg-white/10 border border-white/20 flex items-center justify-center"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                              <div className="w-6 h-6 rounded-full bg-white/30"></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+            </div>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-3xl transform rotate-6"></div>
+              <div className="relative bg-white/5 p-8 rounded-3xl border border-white/10">
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
+                      <Star className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Our Vision</h3>
+                      <p className="text-sm text-white/60">
+                        To be the most trusted financial platform globally
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
+                      <ShieldCheck className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Our Promise</h3>
+                      <p className="text-sm text-white/60">
+                        Uncompromising security and reliability
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Our Growth</h3>
+                      <p className="text-sm text-white/60">
+                        Expanding services and reach
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -422,11 +520,6 @@ export function LandingPage() {
                 <li>
                   <Link href="#security" className="hover:text-white">
                     Security
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#accounts" className="hover:text-white">
-                    Accounts
                   </Link>
                 </li>
                 <li>

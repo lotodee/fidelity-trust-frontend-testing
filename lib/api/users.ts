@@ -148,6 +148,7 @@ export const usersAPI = {
     }
 
     const response = await api.delete(`/user/admin/delete-user/${userId}`);
+    console.log("this is the response on the frontend", response);
     return response.data;
   },
 

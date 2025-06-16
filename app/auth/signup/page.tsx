@@ -105,10 +105,6 @@ export default function SignupPage() {
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
-  const [passwordStrength, setPasswordStrength] = useState<{
-    score: number;
-    message: string;
-  }>({ score: 0, message: "" });
   const [registrationStatus, setRegistrationStatus] = useState<
     "loading" | "success" | "error"
   >("loading");
@@ -127,6 +123,7 @@ export default function SignupPage() {
     pinInfo,
     isLoading,
     kycStatus,
+    passwordStrength,
     setPersonalInfo,
     setIdentityInfo,
     setPinInfo,
@@ -137,41 +134,9 @@ export default function SignupPage() {
     resetForm,
   } = useSignupStore();
 
-  // Reset KYC status when component mounts or when going back to step 2
-  useEffect(() => {
-    if (currentStep === 2) {
-      setKycStatus(false);
-    }
-  }, [currentStep, setKycStatus]);
-
   const { register } = useAuthStore();
 
   const progress = (currentStep / 3) * 100;
-
-  const validatePassword = (password: string) => {
-    const minLength = 7;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    let score = 0;
-    let message = "";
-
-    if (password.length >= minLength) score += 1;
-    if (hasUpperCase) score += 1;
-    if (hasLowerCase) score += 1;
-    if (hasNumbers) score += 1;
-    if (hasSpecialChar) score += 1;
-
-    if (score === 0) message = "Password is too weak";
-    else if (score <= 2) message = "Password is weak";
-    else if (score <= 3) message = "Password is moderate";
-    else if (score <= 4) message = "Password is strong";
-    else message = "Password is very strong";
-
-    return { score, message };
-  };
 
   const handlePersonalInfoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,6 +246,24 @@ export default function SignupPage() {
     setRegistrationMessage("Initializing your account...");
     setRetryCount(0);
 
+    // Log the data being sent
+    console.log("Registration Data:", {
+      firstName: personalInfo.firstName,
+      lastName: personalInfo.lastName,
+      email: personalInfo.email,
+      password: identityInfo.password,
+      pin: pinInfo.pin,
+      personalInfo: {
+        phone: personalInfo.phone,
+        address: personalInfo.address,
+        city: personalInfo.city,
+        state: personalInfo.state,
+        zipCode: personalInfo.zipCode,
+        ssn: identityInfo.ssn, // Log SSN specifically
+        driverLicense: identityInfo.driverLicense,
+      },
+    });
+
     const simulateProgress = () => {
       const interval = setInterval(() => {
         setRegistrationProgress((prev) => {
@@ -299,6 +282,27 @@ export default function SignupPage() {
 
     const attemptRegistration = async () => {
       try {
+        const registrationData = {
+          firstName: personalInfo.firstName,
+          lastName: personalInfo.lastName,
+          email: personalInfo.email,
+          password: identityInfo.password,
+          pin: pinInfo.pin,
+          personalInfo: {
+            phone: personalInfo.phone,
+            address: personalInfo.address,
+            city: personalInfo.city,
+            state: personalInfo.state,
+            zipCode: personalInfo.zipCode,
+            ssn: identityInfo.ssn,
+            driverLicense: identityInfo.driverLicense,
+          },
+        };
+
+        console.log(
+          "Sending registration request with data:",
+          registrationData
+        );
         const response = await register(
           personalInfo.firstName,
           personalInfo.lastName,
@@ -315,6 +319,7 @@ export default function SignupPage() {
             driverLicense: identityInfo.driverLicense,
           }
         );
+        console.log("Registration response:", response);
 
         clearInterval(progressInterval);
         setRegistrationProgress(100);
@@ -327,7 +332,14 @@ export default function SignupPage() {
 
         // Set the signup flow flag
         sessionStorage.setItem("showSignupFlow", "true");
+
+        // Clear signup data after successful registration
+        resetForm();
+
+        // Comment out routing logic temporarily for debugging
+        // router.push("/dashboard");
       } catch (error) {
+        console.error("Registration error:", error);
         clearInterval(progressInterval);
 
         if (retryCount < maxRetries) {
@@ -696,9 +708,7 @@ export default function SignupPage() {
                         type={showPassword ? "text" : "password"}
                         value={identityInfo.password}
                         onChange={(e) => {
-                          const newPassword = e.target.value;
-                          setIdentityInfo({ password: newPassword });
-                          setPasswordStrength(validatePassword(newPassword));
+                          setIdentityInfo({ password: e.target.value });
                         }}
                         className="bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors pr-10"
                         placeholder="Create a strong password"

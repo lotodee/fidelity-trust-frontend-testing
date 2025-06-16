@@ -49,6 +49,13 @@ import { usersAPI } from "@/lib/api/users";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/auth";
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+};
+
 interface TransferFormData {
   recipientName?: string;
   recipientAccount?: string;
@@ -136,7 +143,7 @@ interface Member {
 
 export default function SendMoney() {
   const { toast } = useToast();
-  const { updateUserBalances } = useAuthStore();
+  const { user, updateUserBalances } = useAuthStore();
   const {
     isModalOpen,
     selectedType,
@@ -283,32 +290,58 @@ export default function SendMoney() {
       const transactionData = getTransactionData(selectedType);
       const response = await transactionsAPI.sendMoney(transactionData);
 
-      if (selectedType === "member") {
-        setCurrentTransaction(response.data.recipientTransaction);
+      if (response.success) {
+        if (selectedType === "member") {
+          setCurrentTransaction(response.data.recipientTransaction);
+        } else {
+          setCurrentTransaction(response.data.senderTransaction);
+        }
+
+        setPendingTransactions((prev) => [response.data, ...prev]);
+        setShowSuccess(true);
+        await updateUserBalances();
+
+        setTimeout(() => {
+          setShowSuccess(false);
+          setShowReceipt(true);
+          closeModal();
+          setPin("");
+        }, 2000);
+
+        setInformer({
+          title: "Transfer Initiated",
+          message: "Your transfer has been submitted for processing.",
+          type: "success",
+        });
       } else {
-        setCurrentTransaction(response.data.senderTransaction);
+        // Handle error response
+        const errorMessage =
+          response.error?.message || "Failed to process transfer";
+        const isInsufficientBalance = errorMessage
+          .toLowerCase()
+          .includes("insufficient");
+
+        setInformer({
+          title: isInsufficientBalance ? "Insufficient Balance" : "Error",
+          message: isInsufficientBalance
+            ? "You don't have enough available balance to complete this transfer."
+            : errorMessage,
+          type: "error",
+        });
       }
-
-      setPendingTransactions((prev) => [response.data, ...prev]);
-      setShowSuccess(true);
-      await updateUserBalances();
-
-      setTimeout(() => {
-        setShowSuccess(false);
-        setShowReceipt(true);
-        closeModal();
-        setPin("");
-      }, 2000);
+    } catch (error: any) {
+      // Handle API error response
+      const errorMessage =
+        error.response?.data?.error?.message || "Failed to process transfer";
+      const isInsufficientBalance = errorMessage
+        .toLowerCase()
+        .includes("insufficient");
 
       setInformer({
-        title: "Transfer Initiated",
-        message: "Your transfer has been submitted for processing.",
-        type: "success",
-      });
-    } catch (error) {
-      setInformer({
-        title: "Error",
-        message: "Failed to process transfer. Please try again.",
+        title: isInsufficientBalance ? "Insufficient Balance" : "Error",
+        message: isInsufficientBalance
+          ? "You don't have enough available balance to complete this transfer."
+          : errorMessage,
         type: "error",
       });
     } finally {
@@ -717,7 +750,7 @@ export default function SendMoney() {
 
         {/* Transfer Modal */}
         <Dialog open={isModalOpen} onOpenChange={closeModal}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-2xl">
                 {selectedType &&
@@ -744,12 +777,25 @@ export default function SendMoney() {
                     type="number"
                     step="0.01"
                     placeholder="0.00"
-                    className="pl-8 h-12 text-lg"
+                    className={cn(
+                      "pl-8 h-12 text-lg",
+                      formData.amount &&
+                        Number(formData.amount) >
+                          (user?.availableBalance || 0) &&
+                        "border-red-500 focus-visible:ring-red-500"
+                    )}
                     value={formData.amount}
                     onChange={(e) => setFormData({ amount: e.target.value })}
                     required
                   />
                 </div>
+                {formData.amount &&
+                  Number(formData.amount) > (user?.availableBalance || 0) && (
+                    <p className="text-sm text-red-500 mt-1">
+                      Insufficient funds. Your available balance is{" "}
+                      {formatCurrency(user?.availableBalance || 0)}
+                    </p>
+                  )}
               </div>
 
               <div className="space-y-2">

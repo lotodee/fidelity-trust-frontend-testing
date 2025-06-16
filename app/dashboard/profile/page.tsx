@@ -74,6 +74,7 @@ export default function Profile() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const { user, updateUserBalances } = useAuthStore();
@@ -92,6 +93,8 @@ export default function Profile() {
         setFirstName(userData.firstName);
         setLastName(userData.lastName);
         setEmail(userData.email);
+        setAccountNumber(userData.accountNumber);
+
         setPhone(userData.personalInfo?.phone || "");
         setAddress(userData.personalInfo?.address || "");
         setCity(userData.personalInfo?.city || "");
@@ -220,49 +223,29 @@ export default function Profile() {
     type: "email" | "push",
     setting: string
   ) => {
-    if (type === "email") {
-      setEmailNotifications((prev) => ({
-        ...prev,
-        [setting]: !prev[setting as keyof typeof prev],
-      }));
-      setInformer({
-        title: "Settings Updated",
-        message: "Email notification preferences have been updated.",
-        type: "success",
-      });
-    } else {
-      setPushNotifications((prev) => ({
-        ...prev,
-        [setting]: !prev[setting as keyof typeof prev],
-      }));
-      setInformer({
-        title: "Settings Updated",
-        message: "Push notification preferences have been updated.",
-        type: "success",
-      });
-    }
+    setInformer({
+      title: "Admin Contact Required",
+      message:
+        "An admin will contact you with the necessary steps to update your notification preferences.",
+      type: "info",
+    });
   };
 
   // Handle 2FA Settings
   const handleTwoFactorChange = (method: "sms" | "authenticator") => {
-    setTwoFactorAuth((prev) => ({
-      ...prev,
-      [method]: !prev[method],
-    }));
     setInformer({
-      title: "2FA Updated",
-      message: `Two-factor authentication via ${method} has been ${
-        !twoFactorAuth[method] ? "enabled" : "disabled"
-      }.`,
-      type: "success",
+      title: "Admin Contact Required",
+      message:
+        "An admin will contact you with the necessary steps to set up two-factor authentication.",
+      type: "info",
     });
   };
 
   // Handle Support Actions
   const handleSupportAction = (action: string) => {
     setInformer({
-      title: "Support Request",
-      message: `Your ${action} request has been initiated.`,
+      title: "Admin Contact Required",
+      message: "An admin will contact you shortly to assist with your request.",
       type: "info",
     });
   };
@@ -497,12 +480,10 @@ export default function Profile() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-white/90">
-                          {user?.accountNumber}
+                          {accountNumber}
                         </span>
                         <button
-                          onClick={() =>
-                            copyToClipboard(user?.accountNumber || "")
-                          }
+                          onClick={() => copyToClipboard(accountNumber)}
                           className="p-1 hover:bg-white/20 rounded transition-colors"
                         >
                           <Copy className="h-3 w-3 sm:h-4 sm:w-4 text-white/70" />
@@ -1137,21 +1118,12 @@ export default function Profile() {
                             </div>
                             <div>
                               <div className="text-sm text-gray-500">Email</div>
-                              <div className="font-medium">
-                                support@FidelityTrust.com
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-3">
-                            <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                              <Phone className="h-5 w-5 text-emerald-600" />
-                            </div>
-                            <div>
-                              <div className="text-sm text-gray-500">Phone</div>
-                              <div className="font-medium">
-                                +1 (800) 123-4567
-                              </div>
+                              <a
+                                href="mailto:Mail@fidelitytrust.org"
+                                className="font-medium hover:text-emerald-600 transition-colors"
+                              >
+                                Mail@fidelitytrust.org
+                              </a>
                             </div>
                           </div>
 

@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { usersAPI } from "@/lib/api";
+import { usersAPI } from "@/lib/api/users";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Informer } from "@/components/ui/informer";
@@ -86,15 +86,18 @@ export function EditUserForm() {
   const fetchUser = async () => {
     setIsLoading(true);
     try {
+      console.log("[EditUserForm] Fetching user with ID:", selectedUserId);
       const response = await usersAPI.getUserById(selectedUserId!);
       const userData = response?.data;
+      console.log("[EditUserForm] Received user data:", userData);
       setUser(userData);
 
       // Dynamically flatten the entire user object
       const flattenedData = flattenObject(userData);
+      console.log("[EditUserForm] Flattened user data:", flattenedData);
       setFormData(flattenedData);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error("[EditUserForm] Error fetching user:", error);
       setNotification({
         type: "error",
         title: "Error",
@@ -109,7 +112,11 @@ export function EditUserForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log("[EditUserForm] Form submission started");
+    console.log("[EditUserForm] Current form data:", formData);
+
     if (!formData.firstName || !formData.lastName || !formData.email) {
+      console.log("[EditUserForm] Validation failed - missing required fields");
       setNotification({
         type: "error",
         title: "Missing information",
@@ -122,8 +129,20 @@ export function EditUserForm() {
     try {
       // Reconstruct the nested object structure
       const reconstructedData = unflattenObject(formData);
+      console.log(
+        "[EditUserForm] Reconstructed data for update:",
+        reconstructedData
+      );
 
-      await usersAPI.updateUser(selectedUserId!, reconstructedData);
+      console.log(
+        "[EditUserForm] Sending update request for user:",
+        selectedUserId
+      );
+      const response = await usersAPI.updateUser(
+        selectedUserId!,
+        reconstructedData
+      );
+      console.log("[EditUserForm] Update response:", response);
 
       setNotification({
         type: "success",
@@ -134,7 +153,7 @@ export function EditUserForm() {
       setSelectedUserId(null);
       router.push("/admin/users");
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("[EditUserForm] Error updating user:", error);
       setNotification({
         type: "error",
         title: "Error",
@@ -148,14 +167,18 @@ export function EditUserForm() {
   const renderFormFields = () => {
     if (!user) return null;
 
+    console.log("[EditUserForm] Rendering form fields for user:", user);
+
     const fields = Object.entries(formData).map(([key, value]) => {
       // Skip certain fields that shouldn't be editable
       if (["_id", "__v", "createdAt", "updatedAt"].includes(key)) {
+        console.log("[EditUserForm] Skipping non-editable field:", key);
         return null;
       }
 
       // Handle different field types
       if (key === "role") {
+        console.log("[EditUserForm] Rendering role field with value:", value);
         return (
           <div key={key} className="space-y-2">
             <Label htmlFor={key} className="text-base">
@@ -163,9 +186,15 @@ export function EditUserForm() {
             </Label>
             <Select
               value={value as string}
-              onValueChange={(newValue) =>
-                setFormData({ ...formData, [key]: newValue })
-              }
+              onValueChange={(newValue) => {
+                console.log(
+                  "[EditUserForm] Role changed from",
+                  value,
+                  "to",
+                  newValue
+                );
+                setFormData({ ...formData, [key]: newValue });
+              }}
             >
               <SelectTrigger id={key}>
                 <SelectValue placeholder="Select role" />
@@ -180,6 +209,12 @@ export function EditUserForm() {
       }
 
       if (key === "currentBalance" || key === "availableBalance") {
+        console.log(
+          "[EditUserForm] Rendering balance field:",
+          key,
+          "with value:",
+          value
+        );
         return (
           <div key={key} className="space-y-2">
             <Label htmlFor={key} className="text-base">
@@ -199,9 +234,15 @@ export function EditUserForm() {
                 step="0.01"
                 className="pl-8"
                 value={value as string}
-                onChange={(e) =>
-                  setFormData({ ...formData, [key]: e.target.value })
-                }
+                onChange={(e) => {
+                  console.log(
+                    "[EditUserForm] Balance changed from",
+                    value,
+                    "to",
+                    e.target.value
+                  );
+                  setFormData({ ...formData, [key]: e.target.value });
+                }}
               />
             </div>
           </div>
@@ -209,14 +250,26 @@ export function EditUserForm() {
       }
 
       if (key.includes("isEmailVerified") || key.includes("kycVerified")) {
+        console.log(
+          "[EditUserForm] Rendering verification field:",
+          key,
+          "with value:",
+          value
+        );
         return (
           <div key={key} className="flex items-center space-x-2">
             <Switch
               id={key}
               checked={value as boolean}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, [key]: checked })
-              }
+              onCheckedChange={(checked) => {
+                console.log(
+                  "[EditUserForm] Verification status changed from",
+                  value,
+                  "to",
+                  checked
+                );
+                setFormData({ ...formData, [key]: checked });
+              }}
             />
             <Label htmlFor={key} className="text-base">
               {key
@@ -229,6 +282,12 @@ export function EditUserForm() {
       }
 
       // Default text input for other fields
+      console.log(
+        "[EditUserForm] Rendering text field:",
+        key,
+        "with value:",
+        value
+      );
       return (
         <div key={key} className="space-y-2">
           <Label htmlFor={key} className="text-base">
@@ -240,9 +299,15 @@ export function EditUserForm() {
           <Input
             id={key}
             value={value as string}
-            onChange={(e) =>
-              setFormData({ ...formData, [key]: e.target.value })
-            }
+            onChange={(e) => {
+              console.log(
+                "[EditUserForm] Field changed from",
+                value,
+                "to",
+                e.target.value
+              );
+              setFormData({ ...formData, [key]: e.target.value });
+            }}
           />
         </div>
       );

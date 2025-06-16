@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
@@ -39,6 +39,7 @@ import { NotificationDropdown } from "@/components/notification-dropdown";
 import { useNotificationStore } from "@/lib/store/notifications";
 import { WelcomeModal } from "@/components/welcome-modal";
 import { AnimatePresence } from "framer-motion";
+import { NotificationHandler } from "@/components/notification-handler";
 
 function LoadingLayout() {
   return (
@@ -74,6 +75,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuthStore();
   const { initializeSocket, disconnectSocket } = useNotificationStore();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const socketInitialized = useRef(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -90,13 +92,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, initialized]);
 
+  // Handle socket connection
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !socketInitialized.current) {
+      console.log("[DashboardLayout] Initializing socket connection...");
       initializeSocket();
-      return () => {
-        disconnectSocket();
-      };
+      socketInitialized.current = true;
     }
+
+    return () => {
+      if (socketInitialized.current) {
+        console.log("[DashboardLayout] Cleaning up socket connection...");
+        disconnectSocket();
+        socketInitialized.current = false;
+      }
+    };
   }, [isAuthenticated, initializeSocket, disconnectSocket]);
 
   // Check for signup flow
@@ -105,6 +115,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       const showSignupFlow = sessionStorage.getItem("showSignupFlow");
       if (showSignupFlow === "true") {
         setShowWelcomeModal(true);
+        // Clear the flag after showing the modal
+        sessionStorage.setItem("showSignupFlow", "false");
       }
     }
   }, []);
@@ -217,6 +229,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
+        <NotificationHandler />
         {/* Sidebar */}
         <Sidebar className="border-r border-gray-200 flex-shrink-0 bg-gradient-to-b from-emerald-800 to-emerald-900">
           <SidebarHeader className="p-6">

@@ -151,7 +151,7 @@ const itemVariants = {
 export function RegistrationLoader({
   onRetry,
   onContinue,
-  status = "success",
+  status,
   progress,
   message,
 }: RegistrationLoaderProps) {
@@ -176,6 +176,9 @@ export function RegistrationLoader({
         setCurrentTip((prev) => (prev + 1) % tips.length);
       }, 6000);
 
+      
+
+      router.push("/dashboard")
       return () => {
         clearInterval(factInterval);
         clearInterval(stepInterval);
@@ -348,7 +351,7 @@ export function RegistrationLoader({
                 </motion.div>
               )}
 
-              {status === "success" && (
+              {/* {status === "success" && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -384,7 +387,7 @@ export function RegistrationLoader({
                     </Button>
                   </div>
                 </motion.div>
-              )}
+              )} */}
 
               {status === "error" && (
                 <motion.div

@@ -24,25 +24,13 @@ interface RegisterData {
 
 export const authAPI = {
   login: async (credentials: { email: string; password: string }) => {
-    console.log("Login API called");
-
-    if (APP_STATE === "mock") {
-      console.log("Using mock data for login");
-      return mockData.login(credentials);
-    }
-
     const response = await api.post("/auth/login", credentials);
     return response.data;
   },
 
   adminLogin: async (credentials: { email: string; password: string }) => {
-    if (APP_STATE === "mock") {
-      return mockData.adminLogin(credentials);
-    }
-
     const response = await api.post("/auth/admin-login", credentials);
 
-    // console.log("the resposne from the login",response)
     return response.data;
   },
 
@@ -53,7 +41,7 @@ export const authAPI = {
 
     const response = await api.post("/auth/register", userData);
 
-    console.log("respose reg",response)
+    console.log("respose reg", response);
     return response.data;
   },
 
@@ -78,14 +66,14 @@ export const authAPI = {
     return response.data;
   },
 
-  resetPassword: async (data: { token: string; password: string }) => {
-    if (APP_STATE === "mock") {
-      return mockData.resetPassword(data);
-    }
+  // resetPassword: async (data: { token: string; password: string }) => {
+  //   if (APP_STATE === "mock") {
+  //     return mockData.resetPassword(data);
+  //   }
 
-    const response = await api.post("/auth/reset-password", data);
-    return response.data;
-  },
+  //   const response = await api.post("/auth/reset-password", data);
+  //   return response.data;
+  // },
 
   verifyEmail: async (token: string) => {
     if (APP_STATE === "mock") {
@@ -94,5 +82,51 @@ export const authAPI = {
 
     const response = await api.get(`/auth/verify-email/${token}`);
     return response.data;
+  },
+
+  verifyUser: async (data: { email: string; ssnLastFour: string }) => {
+    try {
+      const response = await api.post("/auth/verify-user", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error verifying user:", error);
+      throw error;
+    }
+  },
+
+  resetPassword: async (data: { userId: string; newPassword: string }) => {
+    try {
+      const response = await api.post("/auth/forgot-password", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      throw error;
+    }
+  },
+
+  changeAdminPassword: async (
+    adminId: string,
+    data: { currentPassword: string; newPassword: string }
+  ) => {
+    try {
+      const response = await api.put(
+        `/auth/admin/change-password/${adminId}`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error changing admin password:", error);
+      throw error;
+    }
+  },
+
+  getAdminProfile: async () => {
+    try {
+      const response = await api.get("/auth/admin/me");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching admin profile:", error);
+      throw error;
+    }
   },
 };

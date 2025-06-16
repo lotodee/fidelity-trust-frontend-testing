@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description: "Experience banking like never before with FidelityTrust",
   manifest: "/manifest.json",
   generator: "v0.dev",
+  icons: {
+    icon: "/fav.png",
+  },
 };
 
 export default function RootLayout({

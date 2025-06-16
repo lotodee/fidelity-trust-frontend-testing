@@ -102,10 +102,15 @@ export default function Chat() {
   const [adminTyping, setAdminTyping] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [shouldScroll, setShouldScroll] = useState(true);
   const { user, isAuthenticated, initialized } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
+  const [containerHeight, setContainerHeight] = useState(300);
+  const MAX_HEIGHT = 600;
+  const MIN_HEIGHT = 300;
 
   useEffect(() => {
     if (!initialized) {
@@ -309,6 +314,44 @@ export default function Chat() {
     }
   };
 
+  // Add scroll handler
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // If we're within 100px of the bottom, enable auto-scroll
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShouldScroll(isNearBottom);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Update scroll behavior when messages change
+  useEffect(() => {
+    if (shouldScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, shouldScroll]);
+
+  // Add effect to handle container height
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Calculate new height based on message count
+      const newHeight = Math.min(
+        MIN_HEIGHT + messages.length * 50, // Grow by 50px per message
+        MAX_HEIGHT // Don't exceed max height
+      );
+      setContainerHeight(newHeight);
+    } else {
+      // Reset to minimum height when no messages
+      setContainerHeight(MIN_HEIGHT);
+    }
+  }, [messages.length]);
+
   if (!initialized) {
     return (
       <DashboardLayout>
@@ -326,10 +369,10 @@ export default function Chat() {
           transition={{ duration: 0.5 }}
         >
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold">
               Live Chat Support
             </h1>
-            <p className="text-gray-500 mt-2">
+            <p className="mt-2">
               Chat with our support team in real-time
             </p>
           </div>
@@ -359,8 +402,11 @@ export default function Chat() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[500px] p-6">
-                <div className="space-y-4">
+              <ScrollArea
+                className="transition-all duration-300 ease-in-out"
+                style={{ height: `${containerHeight}px` }}
+              >
+                <div className="p-6 space-y-4">
                   <AnimatePresence>
                     {messages.map((msg) => (
                       <motion.div
@@ -416,7 +462,7 @@ export default function Chat() {
                       </motion.div>
                     ))}
                   </AnimatePresence>
-                  <div ref={messagesEndRef} />
+                  <div ref={messagesEndRef} className="h-4" />
                 </div>
               </ScrollArea>
               <form onSubmit={handleSendMessage} className="p-4 border-t">

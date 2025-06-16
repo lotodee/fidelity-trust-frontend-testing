@@ -51,10 +51,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Informer } from "@/components/ui/informer";
 import { useSelectedIdsStore } from "@/lib/store/selected-ids";
+import { useAdminUsersStore } from "@/lib/store/admin-users";
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
@@ -66,6 +65,14 @@ export default function AdminUsers() {
   } | null>(null);
   const router = useRouter();
   const { setSelectedUserId } = useSelectedIdsStore();
+
+  // Get users from store
+  const {
+    users,
+    setUsers,
+    deleteUser: deleteUserFromStore,
+  } = useAdminUsersStore();
+  const [filteredUsers, setFilteredUsers] = useState(users);
 
   useEffect(() => {
     fetchUsers();
@@ -109,7 +116,8 @@ export default function AdminUsers() {
     setIsDeleting(true);
     try {
       await usersAPI.deleteUser(userToDelete);
-      setUsers(users?.filter((user) => user._id !== userToDelete));
+      // Update store instead of refetching
+      deleteUserFromStore(userToDelete);
       setNotification({
         type: "success",
         title: "Success",

@@ -135,7 +135,7 @@ export const useAuthStore = create<AuthState>()(
           console.log("the admin login respons in lib", response.data);
           authUtils.storeToken("adminToken", response.data.token);
           set({
-            user: response.data.data,
+            user: response.data,
             isAuthenticated: true,
             isLoading: false,
           });
@@ -180,9 +180,11 @@ export const useAuthStore = create<AuthState>()(
             },
           });
 
+          console.log("the resposne of reg", response.data);
+
           const token = response.data.token;
           const userData = response.data.user;
-
+          console.log("stored token", token);
           authUtils.storeToken("token", token);
           set({
             user: userData,
@@ -205,7 +207,7 @@ export const useAuthStore = create<AuthState>()(
       logout: (isAdmin = false) => {
         authUtils.removeToken("token");
         authUtils.removeToken("adminToken");
-        window.location.href = isAdmin ? "/auth/admin-login" : "/";
+        window.location.href = isAdmin ? "/auth/entry" : "/";
         set({ user: null, isAuthenticated: false });
       },
 

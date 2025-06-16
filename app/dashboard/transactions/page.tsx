@@ -61,6 +61,7 @@ interface Transaction {
   bitcoinAddress?: string;
   btcAmount?: number;
   paymentMethod?: string;
+  description?: string;
 }
 
 export default function Transactions() {
@@ -326,17 +327,23 @@ export default function Transactions() {
                       >
                         <div className="flex items-center space-x-4">
                           <div
-                            className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                            className={`h-10 w-10 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-110 ${
                               transaction.action === "debit"
                                 ? "bg-red-100 text-red-600"
                                 : "bg-emerald-100 text-emerald-600"
                             }`}
                           >
-                            {getCategoryIcon(transaction)}
+                            {transaction.action === "debit" ? (
+                              <ArrowUpRight className="h-5 w-5" />
+                            ) : (
+                              <ArrowDownRight className="h-5 w-5" />
+                            )}
                           </div>
-                          <div>
-                            <div className="font-medium flex items-center gap-2">
-                              {transaction.subtype}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">
+                              {transaction.description || transaction.subtype}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
                               <Badge
                                 variant="secondary"
                                 className={`text-xs ${getStatusColor(
@@ -345,12 +352,12 @@ export default function Transactions() {
                               >
                                 {transaction.status}
                               </Badge>
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {format(
-                                new Date(transaction.createdAt),
-                                "MMM d, yyyy h:mm a"
-                              )}
+                              <span className="text-sm text-gray-500">
+                                {format(
+                                  new Date(transaction.createdAt),
+                                  "MMM d, yyyy h:mm a"
+                                )}
+                              </span>
                             </div>
                             {transaction.bitcoinAddress && (
                               <div className="text-xs text-gray-500 mt-1">
@@ -360,7 +367,7 @@ export default function Transactions() {
                           </div>
                         </div>
                         <div
-                          className={`font-medium ${
+                          className={`font-medium text-lg ${
                             transaction.action === "debit"
                               ? "text-red-600"
                               : "text-emerald-600"
@@ -400,7 +407,7 @@ export default function Transactions() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader className="space-y-4">
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl">
+                <DialogTitle className="text-2xl font-bold">
                   Transaction Receipt
                 </DialogTitle>
                 <Badge
@@ -430,7 +437,7 @@ export default function Transactions() {
                 className="space-y-6"
               >
                 {/* Receipt Header */}
-                <div className="text-center py-6 border-b">
+                <div className="text-center py-6 border-b bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-500 mb-2">
                     Transaction Amount
                   </div>
@@ -460,7 +467,8 @@ export default function Transactions() {
                         Transaction Type
                       </div>
                       <div className="font-medium">
-                        {truncateText(selectedTransaction.subtype)}
+                        {selectedTransaction.description ||
+                          selectedTransaction.subtype}
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -479,7 +487,7 @@ export default function Transactions() {
                         Account Number
                       </div>
                       <div className="font-medium">
-                        {truncateText(selectedTransaction.userId.accountNumber)}
+                        {selectedTransaction.userId.accountNumber}
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -487,9 +495,7 @@ export default function Transactions() {
                         Account Holder
                       </div>
                       <div className="font-medium">
-                        {truncateText(
-                          `${selectedTransaction.userId.firstName} ${selectedTransaction.userId.lastName}`
-                        )}
+                        {`${selectedTransaction.userId.firstName} ${selectedTransaction.userId.lastName}`}
                       </div>
                     </div>
                   </div>
@@ -500,7 +506,7 @@ export default function Transactions() {
                         Bitcoin Address
                       </div>
                       <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded break-all">
-                        {truncateText(selectedTransaction.bitcoinAddress, 25)}
+                        {selectedTransaction.bitcoinAddress}
                       </div>
                     </div>
                   )}
@@ -510,7 +516,7 @@ export default function Transactions() {
                 <div className="flex gap-3 pt-4">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 hover:bg-gray-50"
                     onClick={() => {
                       navigator.clipboard.writeText(selectedTransaction._id);
                       setInformer({
@@ -525,7 +531,7 @@ export default function Transactions() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 hover:bg-gray-50"
                     onClick={handleDownloadReceipt}
                   >
                     <Download className="w-4 h-4 mr-2" />
@@ -533,7 +539,7 @@ export default function Transactions() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 hover:bg-gray-50"
                     onClick={() => window.print()}
                   >
                     <Printer className="w-4 h-4 mr-2" />
@@ -543,7 +549,10 @@ export default function Transactions() {
 
                 {/* Footer */}
                 <div className="text-center text-sm text-gray-500 pt-4 border-t">
-                  <p>This receipt serves as proof of your transaction.</p>
+                  <p className="font-medium">FidelityTrust Bank</p>
+                  <p className="mt-1">
+                    This receipt serves as proof of your transaction.
+                  </p>
                   <p className="mt-1">Keep it for your records.</p>
                 </div>
               </motion.div>

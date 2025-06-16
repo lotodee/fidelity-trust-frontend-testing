@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface WelcomeModalProps {
@@ -43,10 +42,19 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
       });
     }, 250);
 
-    return () => clearInterval(interval);
+    // Auto close after 5 seconds
+    const autoCloseTimer = setTimeout(() => {
+      handleClose();
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(autoCloseTimer);
+    };
   }, []);
 
-  const handleContinue = () => {
+  const handleClose = () => {
+    // Clear the signup flow flag
     sessionStorage.setItem("showSignupFlow", "false");
     onClose();
   };
@@ -57,7 +65,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -74,14 +82,13 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
         <div className="relative">
           {/* Close Button */}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
 
           <div className="p-8">
-
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -91,10 +98,10 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                 damping: 15,
                 delay: 0.2,
               }}
-              className="mb-8"
+              className="mb-8 flex justify-center"
             >
-              <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-md inline-block">
-                <span className="font-bold text-2xl flex flex-row w-full justify-center items-center">
+              <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-md">
+                <span className="font-bold text-2xl flex items-center justify-center">
                   <span className="text-emerald-300">Fidelity</span>
                   <span className="text-white">Trust</span>
                 </span>
@@ -150,22 +157,6 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
               >
                 Your account is now ready. Welcome to the FidelityTrust family!
               </motion.p>
-            </motion.div>
-
-            {/* Continue Button */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-8"
-            >
-              <Button
-                onClick={handleContinue}
-                className="w-full bg-white text-emerald-800 hover:bg-emerald-50 shadow-lg transition-all duration-300 hover:-translate-y-0.5"
-              >
-                Continue to Dashboard
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
             </motion.div>
           </div>
         </div>

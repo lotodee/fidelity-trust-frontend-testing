@@ -52,10 +52,9 @@ import { useAdminTransactionStore } from "@/lib/store/admin-transactions";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useSelectedIdsStore } from "@/lib/store/selected-ids";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAdminTransactionsStore } from "@/lib/store/admin-transactions";
 
 export default function AdminTransactions() {
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"incoming" | "outgoing">(
     "incoming"
@@ -70,6 +69,15 @@ export default function AdminTransactions() {
   const router = useRouter();
   const { setSelectedUser } = useAdminTransactionStore();
   const { setSelectedTransactionId } = useSelectedIdsStore();
+
+  // Get transactions from store
+  const {
+    transactions,
+    setTransactions,
+    updateTransaction: updateTransactionInStore,
+  } = useAdminTransactionsStore();
+  const [filteredTransactions, setFilteredTransactions] =
+    useState(transactions);
 
   const fetchUsers = async () => {
     try {
@@ -114,8 +122,7 @@ export default function AdminTransactions() {
     setIsLoading(true);
     try {
       const response = await transactionsAPI.getAllTransactions();
-
-      console.log("the trasncs", response.data);
+      console.log("All Transactions Data:", response.data);
       setTransactions(response.data);
       setFilteredTransactions(response.data);
     } catch (error) {
@@ -326,6 +333,10 @@ export default function AdminTransactions() {
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
                               transition={{ duration: 0.2 }}
+                              className="hover:bg-gray-50 cursor-pointer"
+                              onClick={() =>
+                                handleEditTransaction(transaction._id)
+                              }
                             >
                               <TableCell>
                                 <div className="flex items-center">
@@ -346,14 +357,15 @@ export default function AdminTransactions() {
                               <TableCell>
                                 <div className="flex items-center">
                                   <div className="mr-2">
-                                    {getTransactionIcon(transaction.type)}
+                                    {transaction.action === "debit" ? (
+                                      <ArrowUpRight className="h-5 w-5 text-red-500" />
+                                    ) : (
+                                      <ArrowDownRight className="h-5 w-5 text-emerald-500" />
+                                    )}
                                   </div>
                                   <span className="capitalize">
-                                    {transaction.type === "fundWallet"
-                                      ? "Fund Wallet"
-                                      : transaction.type === "sendMoney"
-                                      ? "Send Money"
-                                      : transaction.type}
+                                    {transaction.description ||
+                                      transaction.type}
                                   </span>
                                 </div>
                               </TableCell>
@@ -380,29 +392,9 @@ export default function AdminTransactions() {
                                 {formatDate(transaction.createdAt)}
                               </TableCell>
                               <TableCell className="max-w-[200px]">
-                                {transaction.type === "fundWallet" ? (
-                                  <div className="text-sm">
-                                    <div>
-                                      BTC: {transaction.data?.btcAmount}
-                                    </div>
-                                    <div className="text-gray-500 truncate">
-                                      {transaction.data?.bitcoinAddress}
-                                    </div>
-                                  </div>
-                                ) : transaction.type === "sendMoney" ? (
-                                  <div className="text-sm">
-                                    <div>
-                                      To: {transaction.data?.recipientName}
-                                    </div>
-                                    <div className="text-gray-500">
-                                      Acc: {transaction.data?.recipientAccount}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="text-sm text-gray-500">
-                                    {transaction.data?.description || "N/A"}
-                                  </div>
-                                )}
+                                <div className="text-sm text-gray-600">
+                                  {transaction.description || "N/A"}
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <Button

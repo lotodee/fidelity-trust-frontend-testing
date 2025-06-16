@@ -24,6 +24,7 @@ import {
   HelpCircle,
   MessageSquare,
   Phone,
+  Mail,
 } from "lucide-react";
 
 const helpSections = [
@@ -152,15 +153,17 @@ export default function HelpCenter() {
             <Card className="bg-gradient-to-br from-navy-800 to-navy-950 text-white">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
-                  <Phone className="h-12 w-12 text-white/80 mb-4" />
-                  <h3 className="font-medium text-lg mb-2">Contact Us</h3>
+                  <Mail className="h-12 w-12 text-white/80 mb-4" />
+                  <h3 className="font-medium text-lg mb-2">Email Us</h3>
                   <p className="text-white/70 mb-6">
-                    Prefer to speak with someone? Our customer service team is
-                    here to help.
+                    Need to send us a message? Our support team will respond
+                    within 24 hours.
                   </p>
-                  <button className="w-full border border-white/20 text-white hover:bg-white/10 py-2 px-4 rounded-lg">
-                    Call Support: 1-800-123-4567
-                  </button>
+                  <a href="mailto:Mail@fidelitytrust.org" className="w-full">
+                    <button className="w-full border border-white/20 text-white hover:bg-white/10 py-2 px-4 rounded-lg">
+                      Mail@fidelitytrust.org
+                    </button>
+                  </a>
                 </div>
               </CardContent>
             </Card>

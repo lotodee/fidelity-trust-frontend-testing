@@ -61,6 +61,7 @@ interface Transaction {
   bitcoinAddress?: string;
   btcAmount?: number;
   paymentMethod?: string;
+  description?: string;
 }
 
 export default function Dashboard() {
@@ -94,6 +95,7 @@ export default function Dashboard() {
           data: undefined,
         };
       });
+      console.log("Recent Transactions Data:", flattened);
       setRecentTransactions(flattened.slice(0, 5)); // Get only 5 most recent transactions
     } catch (error) {
       console.error("Error fetching recent transactions:", error);
@@ -370,7 +372,7 @@ export default function Dashboard() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: 0.1 * index }}
-                    className="flex items-center justify-between py-3 hover:bg-gray-50 rounded-lg px-4 transition-colors duration-200 cursor-pointer"
+                    className="flex items-center justify-between py-4 hover:bg-gray-50 rounded-lg px-4 transition-colors duration-200 cursor-pointer"
                     onClick={() => {
                       setSelectedTransaction(transaction);
                       setShowReceipt(true);
@@ -384,11 +386,17 @@ export default function Dashboard() {
                             : "bg-emerald-100 text-emerald-600"
                         }`}
                       >
-                        {getCategoryIcon(transaction)}
+                        {transaction.action === "debit" ? (
+                          <ArrowUpRight className="h-5 w-5" />
+                        ) : (
+                          <ArrowDownRight className="h-5 w-5" />
+                        )}
                       </div>
-                      <div>
-                        <div className="font-medium flex items-center gap-2">
-                          {transaction.subtype}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">
+                          {transaction.description || transaction.subtype}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
                           <Badge
                             variant="secondary"
                             className={`text-xs ${getStatusColor(
@@ -397,12 +405,12 @@ export default function Dashboard() {
                           >
                             {transaction.status}
                           </Badge>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {format(
-                            new Date(transaction.createdAt),
-                            "MMM d, yyyy h:mm a"
-                          )}
+                          <span className="text-sm text-gray-500">
+                            {format(
+                              new Date(transaction.createdAt),
+                              "MMM d, yyyy h:mm a"
+                            )}
+                          </span>
                         </div>
                         {transaction.bitcoinAddress && (
                           <div className="text-xs text-gray-500 mt-1">
@@ -412,7 +420,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div
-                      className={`font-medium ${
+                      className={`font-medium text-lg ${
                         transaction.action === "debit"
                           ? "text-red-600"
                           : "text-emerald-600"
