@@ -369,12 +369,8 @@ export default function Chat() {
           transition={{ duration: 0.5 }}
         >
           <div className="mb-8">
-            <h1 className="text-3xl font-bold">
-              Live Chat Support
-            </h1>
-            <p className="mt-2">
-              Chat with our support team in real-time
-            </p>
+            <h1 className="text-3xl font-bold">Live Chat Support</h1>
+            <p className="mt-2">Chat with our support team in real-time</p>
           </div>
 
           <Card className="border-none shadow-lg">

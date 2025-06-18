@@ -184,9 +184,14 @@ export function NotificationDropdown() {
           {notifications.length > 0 ? (
             notifications.map((notification) => {
               const content = getNotificationContent(notification);
+              const timestamp =
+                notification.timestamp instanceof Date
+                  ? notification.timestamp.getTime()
+                  : new Date(notification.timestamp).getTime();
+              const uniqueKey = `${notification.id}-${timestamp}-${notification.type}`;
               return (
                 <DropdownMenuItem
-                  key={notification.id}
+                  key={uniqueKey}
                   className={cn(
                     "flex flex-col items-start gap-1 p-4 cursor-pointer",
                     !notification.read && "bg-emerald-50/50"
